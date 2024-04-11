@@ -1,0 +1,72 @@
+/* *********************** Custom properties ********************** */
+:root {
+  --first-color: #390099;
+  --second-color: #ff5400;
+  --third-color: #ff0054;
+  --fourth-color: #ffbd00;
+
+  --bs-list-group-action-color: var(--second-color);
+}
+
+/* *********************** Reset styles ********************** */
+
+body {
+  margin: 0;
+  padding: 0;
+}
+
+a {
+  text-decoration: none;
+  color: var(--second-color);
+  font-weight: bold;
+  transition: opacity 300ms ease;
+}
+
+a:hover {
+  opacity: 0.8;
+}
+
+/* *********************** Bootstrap styles ********************** */
+
+.btn-warning {
+  background-color: var(--fourth-color);
+}
+
+.list-group-item-action {
+  color: var(--second-color);
+}
+
+.list-group-item-action:hover {
+  color: var(--second-color);
+  opacity: 0.8;
+}
+
+/* *********************** My styles ********************** */
+
+.bg-gradiend {
+  background-image: linear-gradient(
+    #9e0059,
+    #940066,
+    #830076,
+    #690087,
+    #390099
+  );
+}
+
+.bg-primary {
+  background-color: var(--first-color) !important;
+}
+
+.logo {
+  width: auto;
+  height: 2rem;
+}
+
+.hidden {
+  opacity: 0;
+  user-select: none;
+}
+
+.scroll-margin {
+  scroll-margin-top: 12ex;
+}
