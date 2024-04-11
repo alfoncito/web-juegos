@@ -15,17 +15,6 @@ body {
   padding: 0;
 }
 
-a {
-  text-decoration: none;
-  color: var(--second-color);
-  font-weight: bold;
-  transition: opacity 300ms ease;
-}
-
-a:hover {
-  opacity: 0.8;
-}
-
 /* *********************** Bootstrap styles ********************** */
 
 .btn-warning {
@@ -39,6 +28,17 @@ a:hover {
 .list-group-item-action:hover {
   color: var(--second-color);
   opacity: 0.8;
+}
+
+.link {
+  text-decoration: none;
+  color: var(--second-color);
+  font-weight: bold;
+  transition: opacity 300ms ease;
+}
+
+.link:hover {
+  opacity: 0.75;
 }
 
 /* *********************** My styles ********************** */
@@ -55,6 +55,28 @@ a:hover {
 
 .bg-primary {
   background-color: var(--first-color) !important;
+}
+
+.btn-dificulty-active,
+.btn-dificulty:hover {
+  background-color: var(--second-color);
+  color: var(--bs-white);
+}
+
+.card-hover {
+  transition: background-color 300ms ease;
+}
+
+.card-hover:hover {
+  background-color: #39009940;
+}
+
+.card-hover .card-title {
+  transition: opacity 300ms 100ms ease;
+}
+
+.card-hover:hover .card-title {
+  opacity: 1 !important;
 }
 
 .logo {
