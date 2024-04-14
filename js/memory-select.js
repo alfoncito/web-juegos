@@ -1,5 +1,6 @@
 const main = () => {
   handleDificultyButtons();
+  toggleCollapseSelectorDificulty();
 };
 
 const handleDificultyButtons = () => {
@@ -24,12 +25,10 @@ const adjustDificulty = (dificulty) => {
   links.forEach((link) => {
     let objectLink = new URL(link.href);
 
-    // console.log(objectLink);
     if (objectLink.searchParams.has("dificulty"))
       objectLink.searchParams.set("dificulty", dificulty);
     else objectLink.searchParams.append("dificulty", dificulty);
     link.href = objectLink.href;
-    console.log(link.href);
   });
 };
 
