@@ -92,3 +92,27 @@ body {
 .scroll-margin {
   scroll-margin-top: 12ex;
 }
+
+.memory-card {
+  transform-style: preserve-3d;
+  cursor: pointer;
+  transition: transform 500ms ease-out;
+}
+
+.memory-card:hover {
+  transform: rotateY(180deg);
+}
+
+.memory-card-side-down {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: var(--second-color);
+  backface-visibility: hidden;
+}
+
+.perspective {
+  perspective: 800px;
+}
