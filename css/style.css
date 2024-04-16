@@ -99,7 +99,7 @@ body {
   transition: transform 500ms ease-out;
 }
 
-.memory-card:hover {
+.flip {
   transform: rotateY(180deg);
 }
 
@@ -115,4 +115,55 @@ body {
 
 .perspective {
   perspective: 800px;
+}
+
+.text-prymary {
+  color: var(--first-color);
+}
+
+.text-second {
+  color: var(--second-color);
+}
+
+.timer {
+  font-size: calc(1.375rem + 1.5vw);
+  font-weight: bold;
+  line-height: 1.2;
+}
+
+.memory-tag {
+  display: flex;
+  align-items: center;
+}
+
+/* X-Small devices (portrait phones, less than 576px)
+ No media query for `xs` since this is the default in Bootstrap */
+
+/* Small devices (landscape phones, 576px and up) */
+@media (min-width: 576px) {
+}
+
+/* Medium devices (tablets, 768px and up) */
+@media (min-width: 768px) {
+  .timer {
+    width: 100%;
+    font-size: calc(1.575rem + 3.9vw);
+  }
+
+  .memory-tag {
+    width: calc(50% - 0.5rem);
+    flex-direction: column-reverse;
+  }
+}
+
+/* Large devices (desktops, 992px and up) */
+@media (min-width: 992px) {
+}
+
+/* X-Large devices (large desktops, 1200px and up) */
+@media (min-width: 1200px) {
+}
+
+/* XX-Large devices (larger desktops, 1400px and up) */
+@media (min-width: 1400px) {
 }

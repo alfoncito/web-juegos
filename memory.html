@@ -39,92 +39,33 @@
       <div class="container pb-5">
         <h1 class="h1">Memoria</h1>
 
-        <section class="row">
-          <div class="col-12 row row-cols-5 g-3" id="memory-container">
-            <div class="col perspective">
-              <div class="memory-card position-relative rounded">
-                <img
-                  src="img/famoso_1.jpg"
-                  alt="famoso 1"
-                  class="rounded memory-card-side-up img-fluid"
-                />
-                <div class="rounded memory-card-side-down"></div>
-              </div>
+        <section class="row gx-md-5">
+          <div
+            class="col-12 col-md-4 order-md-last d-flex flex-wrap align-content-md-start"
+          >
+            <div
+              id="timer"
+              class="timer text-second p-1 mx-1 mx-md-0 my-md-1 bg-light rounded text-center mx-md-1"
+            >
+              00:00
             </div>
-            <div class="col">
-              <div class="bg-info rounded py-5"></div>
+            <div class="memory-tag p-1 mx-1 m-md-1 bg-light rounded">
+              <span class="text-secondary fs-6 d-inline-block mx-2 mx-md-0">
+                Intentos
+              </span>
+              <span class="display-6 fw-bold text-second">10</span>
             </div>
-            <div class="col">
-              <div class="bg-info rounded py-5"></div>
-            </div>
-            <div class="col">
-              <div class="bg-info rounded py-5"></div>
-            </div>
-            <div class="col">
-              <div class="bg-info rounded py-5"></div>
-            </div>
-            <div class="col">
-              <div class="bg-info rounded py-5"></div>
-            </div>
-            <div class="col">
-              <div class="bg-info rounded py-5"></div>
-            </div>
-            <div class="col">
-              <div class="bg-info rounded py-5"></div>
-            </div>
-            <div class="col">
-              <div class="bg-info rounded py-5"></div>
-            </div>
-            <div class="col">
-              <div class="bg-info rounded py-5"></div>
-            </div>
-            <div class="col">
-              <div class="bg-info rounded py-5"></div>
-            </div>
-            <div class="col">
-              <div class="bg-info rounded py-5"></div>
-            </div>
-            <div class="col">
-              <div class="bg-info rounded py-5"></div>
-            </div>
-            <div class="col">
-              <div class="bg-info rounded py-5"></div>
-            </div>
-            <div class="col">
-              <div class="bg-info rounded py-5"></div>
-            </div>
-            <div class="col">
-              <div class="bg-info rounded py-5"></div>
-            </div>
-            <div class="col">
-              <div class="bg-info rounded py-5"></div>
-            </div>
-            <div class="col">
-              <div class="bg-info rounded py-5"></div>
-            </div>
-            <div class="col">
-              <div class="bg-info rounded py-5"></div>
-            </div>
-            <div class="col">
-              <div class="bg-info rounded py-5"></div>
-            </div>
-            <div class="col">
-              <div class="bg-info rounded py-5"></div>
-            </div>
-            <div class="col">
-              <div class="bg-info rounded py-5"></div>
-            </div>
-            <div class="col">
-              <div class="bg-info rounded py-5"></div>
-            </div>
-            <div class="col">
-              <div class="bg-info rounded py-5"></div>
-            </div>
-            <div class="col">
-              <div class="bg-info rounded py-5"></div>
+            <div class="memory-tag p-1 mx-1 m-md-1 bg-light rounded">
+              <span class="text-secondary fs-6 d-inline-block mx-2 mx-md-0">
+                Restantes
+              </span>
+              <span class="display-6 fw-bold text-second">4</span>
             </div>
           </div>
-          <div></div>
+          <div
+            id="memory-container"
+            class="col-12 col-md-8 row row-cols-4 g-3"
+          ></div>
         </section>
       </div>
     </main>
