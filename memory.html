@@ -38,6 +38,48 @@
     <main class="min-vh-100">
       <div class="container pb-5">
         <h1 class="h1">Memoria</h1>
+        <a href="/memory-select.html" class="link">
+          Volver a la selección <i class="bi bi-arrow-return-left"></i>
+        </a>
+
+        <!-- Modal -->
+        <div
+          class="modal fade"
+          id="modal-win"
+          tabindex="-1"
+          aria-labelledby="exampleModalLabel"
+          aria-hidden="true"
+          data-bs-backdrop="static"
+        >
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="modal-header justify-content-center border-0 pb-0">
+                <h1 class="modal-title display-3" id="exampleModalLabel">
+                  ¡Felicidades!
+                </h1>
+              </div>
+              <div class="modal-body py-0"></div>
+              <div class="modal-footer border-0">
+                <button
+                  id="modal-exit"
+                  type="button"
+                  class="btn btn-secondary"
+                  data-bs-dismiss="modal"
+                >
+                  No, otro día
+                </button>
+                <button
+                  id="modal-continue"
+                  type="button"
+                  class="btn btn-primary"
+                  data-bs-dismiss="modal"
+                >
+                  Si, otra más
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
 
         <section class="row gx-md-5">
           <div
@@ -53,18 +95,20 @@
               <span class="text-secondary fs-6 d-inline-block mx-2 mx-md-0">
                 Intentos
               </span>
-              <span class="display-6 fw-bold text-second">10</span>
+              <span id="trieds" class="display-6 fw-bold text-second">0</span>
             </div>
             <div class="memory-tag p-1 mx-1 m-md-1 bg-light rounded">
               <span class="text-secondary fs-6 d-inline-block mx-2 mx-md-0">
                 Restantes
               </span>
-              <span class="display-6 fw-bold text-second">4</span>
+              <span id="remaining" class="display-6 fw-bold text-second">
+                0
+              </span>
             </div>
           </div>
           <div
             id="memory-container"
-            class="col-12 col-md-8 row row-cols-4 g-3"
+            class="col-12 col-md-8 col-lg-6 row g-3 position-relative"
           ></div>
         </section>
       </div>

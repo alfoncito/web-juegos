@@ -12,23 +12,26 @@ const imagesPath = {
     "famoso_10.webp",
     "famoso_11.jpg",
     "famoso_12.jpg",
-    "famoso_13.jpg",
-    "famoso_14.jpg",
+    "famoso_13.webp",
+    "famoso_14.webp",
     "famoso_15.jpg",
     "famoso_16.jpg",
-    "famoso_17.jpg",
-    "famoso_18.jpg",
-    "famoso_19.jpg",
+    "famoso_17.jpeg",
+    "famoso_18.webp",
+    "famoso_19.webp",
     "famoso_20.jpg",
     "famoso_21.jpg",
     "famoso_22.jpg",
-    "famoso_23.jpg",
-    "famoso_24.jpg",
+    "famoso_23.webp",
+    "famoso_24.webp",
     "famoso_25.jpg",
-    "famoso_26.jpg",
-    "famoso_27.webp",
+    "famoso_26.webp",
+    "famoso_27.jpeg",
     "famoso_28.webp",
-    "famoso_29.jpg",
+    "famoso_29.webp",
+    "famoso_30.jpg",
+    "famoso_31.webp",
+    "famoso_32.jpg",
   ],
   cars: [],
   mushrooms: [],
@@ -36,13 +39,55 @@ const imagesPath = {
 };
 
 const main = () => {
-  loadCards();
-  handlerMouse();
+  startGame();
 };
 
-const handlerMouse = () => {
+const startGame = () => {
   let $hand,
-    isBusyHand = false;
+    timer = createTimer(document.getElementById("timer")),
+    $movements = document.getElementById("trieds"),
+    movements = 0,
+    $remaining = document.getElementById("remaining"),
+    remaining = 8,
+    isBusyHand = false,
+    modal = createWinModal();
+
+  const init = () => {
+    let $container = document.getElementById("memory-container"),
+      searchParams = new URL(location.href).searchParams,
+      dificulty = searchParams.get("dificulty"),
+      images = imagesPath[searchParams.get("type")],
+      $loader = createLoader();
+
+    movements = 0;
+    switch (dificulty) {
+      case "easy":
+        remaining = 8;
+        $container.classList.add("row-cols-4");
+        break;
+      case "medium":
+        remaining = 15;
+        $container.classList.add("row-cols-6");
+        break;
+      case "hard":
+        remaining = 18;
+        $container.classList.add("row-cols-6");
+        break;
+      default:
+        break;
+    }
+
+    $container.innerHTML = "";
+    $movements.textContent = movements;
+    renderRemaining();
+    timer.reset();
+    $container.appendChild($loader);
+    loadCards(images, remaining).then(($cards) => {
+      $loader.remove();
+      $container.appendChild($cards);
+      timer.start();
+    });
+  };
 
   const handleClick = (e) => {
     if (
@@ -51,12 +96,15 @@ const handlerMouse = () => {
     ) {
       let $card = e.target.closest(".memory-card");
 
-      if ($card.classList.contains(".memory-card")) return;
+      if ($card.classList.contains("flip")) return;
 
       $card.classList.add("flip");
       if ($hand) {
+        addMovement();
         if ($card.dataset.id === $hand.dataset.id) {
           console.log("Match, hurra!!!");
+          subtractRemaining();
+          if (remaining === 0) win();
         } else {
           let $otherHand = $hand;
 
@@ -75,27 +123,147 @@ const handlerMouse = () => {
     }
   };
 
+  const addMovement = () => {
+    movements++;
+    $movements.textContent = movements;
+  };
+
+  const renderRemaining = () => {
+    $remaining.textContent = remaining;
+  };
+
+  const subtractRemaining = () => {
+    remaining--;
+    renderRemaining();
+  };
+
+  const win = () => {
+    timer.stop();
+    modal.show({
+      time: timer.getTime(),
+      movements,
+    });
+  };
+
+  init();
+  modal.onContinue(init);
+  modal.onExit(() => (location.href = "/"));
   document.addEventListener("click", handleClick);
 };
 
-const loadCards = () => {
-  let paths = choiseImages(imagesPath.famous, 8),
-    urlsRes = loadImages(paths),
-    $container = document.getElementById("memory-container"),
+const createWinModal = () => {
+  let $modalElm = document.getElementById("modal-win"),
+    $modalBody = document.querySelector(".modal-body"),
+    opts = {
+      backdrop: false,
+    },
+    modal = new bootstrap.Modal($modalElm, opts),
+    cbContinue,
+    cbExit;
+
+  $modalElm.addEventListener("hidden.bs.modal", () => {
+    $modalBody.innerHTML = "";
+  });
+
+  $modalElm.addEventListener("click", (e) => {
+    if (e.target.id === "modal-continue") cbContinue?.();
+    else if (e.target.id === "modal-exit") cbExit?.();
+  });
+
+  return {
+    show(data) {
+      $modalBody.insertAdjacentHTML("afterbegin", createModalBodyHTML(data));
+      modal.show();
+    },
+    onContinue(cb) {
+      cbContinue = cb;
+    },
+    onExit(cb) {
+      cbExit = cb;
+    },
+  };
+};
+
+const createModalBodyHTML = (data = {}) => {
+  return `
+    <img class="w-75 d-block mx-auto" src="/img/celebracion.jpg" alt="Felicidades">
+    <p class="text-end"><small><a href="https://www.freepik.es/vector-gratis/gente-feliz-bailando-fiesta-juntos-plantilla-web-dibujos-animados-emocionados-amigos-o-companeros-trabajo-celebrando-confeti_10581753.htm#query=celebracion%20logros&position=20&from_view=keyword&track=ais&uuid=d23d0f6f-d269-4ea2-a125-e2913e1870a8">Imagen de pch.vector</a> en Freepik</small></p>
+    <table class="table">
+      <tbody>
+        <tr>
+          <td scope="row" class="fw-bold">tiempo</th>
+          <td>${data.time ?? "10:00"}</td>
+        </tr>
+        <tr>
+          <td scope="row" class="fw-bold">movimientos</td>
+          <td>${data.movements ?? 8}</td>
+        </tr>
+      </tbody>
+    </table>
+    <p class="text-second">¿Jugamos otra partida?</p>
+  `;
+};
+
+const createLoader = () => {
+  let $loader = document.createElement("div");
+
+  $loader.classList.add(
+    "loader",
+    "position-absolute",
+    "top-50",
+    "start-50",
+    "translate-middle"
+  );
+  return $loader;
+};
+
+const createTimer = ($elem) => {
+  let intervalId,
+    time = 0;
+
+  return {
+    start() {
+      intervalId = setInterval(() => {
+        time++;
+        $elem.textContent = `${formatt0(Math.floor(time / 60), 2)}:${formatt0(
+          time % 60,
+          2
+        )}`;
+      }, 1000);
+    },
+    stop() {
+      clearInterval(intervalId);
+      intervalId = null;
+    },
+    reset() {
+      time = 0;
+      $elem.textContent = "00:00";
+    },
+    getTime() {
+      return $elem.textContent;
+    },
+  };
+};
+
+const formatt0 = (num, zeros) => {
+  return `${"0".repeat(zeros)}${num.toString().replace("-", "")}`.slice(-zeros);
+};
+
+const loadCards = async (images, cardsCount, alt = "Una imagen") => {
+  let paths = choiseImages(images, cardsCount),
+    urls = await loadImages(paths),
     cards = [],
     $frag = document.createDocumentFragment();
 
-  urlsRes.then((urls) => {
-    urls.forEach((url) => {
-      let $memoryCard = memoryCardElement(url, "Famoso");
+  urls.forEach((url) => {
+    let $memoryCard = memoryCardElement(url, alt);
 
-      cards.push($memoryCard.cloneNode(true));
-      cards.push($memoryCard);
-    });
-    fisherYatesShuffle(cards);
-    cards.forEach((c) => $frag.appendChild(c));
-    $container.appendChild($frag);
+    cards.push($memoryCard.cloneNode(true));
+    cards.push($memoryCard);
   });
+  fisherYatesShuffle(cards);
+  cards.forEach((c) => $frag.appendChild(c));
+  return $frag;
 };
 
 const loadImages = async (paths) => {
