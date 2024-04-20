@@ -187,7 +187,13 @@ const createWinModal = () => {
 const createModalBodyHTML = (data = {}) => {
   return `
     <img class="w-75 d-block mx-auto" src="/img/celebracion.jpg" alt="Felicidades">
-    <p class="text-end"><small><a href="https://www.freepik.es/vector-gratis/gente-feliz-bailando-fiesta-juntos-plantilla-web-dibujos-animados-emocionados-amigos-o-companeros-trabajo-celebrando-confeti_10581753.htm#query=celebracion%20logros&position=20&from_view=keyword&track=ais&uuid=d23d0f6f-d269-4ea2-a125-e2913e1870a8">Imagen de pch.vector</a> en Freepik</small></p>
+    <p class="text-end text-secondary">
+      <small>
+        <a href="https://www.freepik.es/vector-gratis/gente-feliz-bailando-fiesta-juntos-plantilla-web-dibujos-animados-emocionados-amigos-o-companeros-trabajo-celebrando-confeti_10581753.htm#query=celebracion%20logros&position=20&from_view=keyword&track=ais&uuid=d23d0f6f-d269-4ea2-a125-e2913e1870a8">
+          Imagen de pch.vector
+        </a> en Freepik
+      </small>
+    </p>
     <table class="table">
       <tbody>
         <tr>
@@ -207,13 +213,7 @@ const createModalBodyHTML = (data = {}) => {
 const createLoader = () => {
   let $loader = document.createElement("div");
 
-  $loader.classList.add(
-    "loader",
-    "position-absolute",
-    "top-50",
-    "start-50",
-    "translate-middle"
-  );
+  $loader.classList.add("loader", "position-absolute", "top-50", "start-50");
   return $loader;
 };
 
