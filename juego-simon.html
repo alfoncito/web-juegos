@@ -37,15 +37,12 @@
     </nav>
     <main class="min-vh-100">
       <div class="container pb-5">
-        <h1 class="h1">Juego de simón</h1>
-        <a href="/memory-select.html" class="link">
-          Volver a la selección <i class="bi bi-arrow-return-left"></i>
-        </a>
+        <h1 class="h1 text-prymary">Juego de simón</h1>
 
         <!-- Modal -->
         <div
           class="modal fade"
-          id="modal-win"
+          id="modal"
           tabindex="-1"
           aria-labelledby="exampleModalLabel"
           aria-hidden="true"
@@ -55,7 +52,7 @@
             <div class="modal-content">
               <div class="modal-header justify-content-center border-0 pb-0">
                 <h1 class="modal-title display-3" id="exampleModalLabel">
-                  ¡Felicidades!
+                  ¡Fin del juego!
                 </h1>
               </div>
               <div class="modal-body py-0"></div>
@@ -66,7 +63,7 @@
                   class="btn btn-secondary"
                   data-bs-dismiss="modal"
                 >
-                  No, otro día
+                  ¡¡¡Estoy harto de este juego!!!
                 </button>
                 <button
                   id="modal-continue"
@@ -74,39 +71,53 @@
                   class="btn btn-primary"
                   data-bs-dismiss="modal"
                 >
-                  Si, otra más
+                  Solo una más
                 </button>
               </div>
             </div>
           </div>
         </div>
 
+        <p class="text-secondary">
+          Presiona el botón para iniciar un nuevo juego
+        </p>
         <section class="row gx-md-5">
           <div
             class="col-12 col-md-4 order-md-last d-flex flex-wrap align-content-md-start"
-          ></div>
+          >
+            <div class="memory-tag p-1 mx-1 m-md-1 bg-light rounded">
+              <span class="text-secondary fs-6 d-inline-block mx-2 mx-md-0">
+                Puntuación
+              </span>
+              <span id="score" class="display-6 fw-bold text-second">0</span>
+            </div>
+          </div>
           <div
             id="simon-container"
             class="col-12 col-md-8 col-lg-6 row g-3 position-relative"
           >
-            <div class="simon">
+            <div class="simon p-3 p-xl-4">
               <div class="simon-btn-container" style="--rotate: 0turn">
                 <div class="simon-btn-light green d-none"></div>
-                <div class="simon-btn green"></div>
+                <div class="simon-btn green" id="green"></div>
               </div>
               <div class="simon-btn-container" style="--rotate: 0.25turn">
                 <div class="simon-btn-light red d-none"></div>
-                <div class="simon-btn red"></div>
+                <div class="simon-btn red" id="red"></div>
               </div>
               <div class="simon-btn-container" style="--rotate: 0.75turn">
                 <div class="simon-btn-light yellow d-none"></div>
-                <div class="simon-btn yellow"></div>
+                <div class="simon-btn yellow" id="yellow"></div>
               </div>
               <div class="simon-btn-container" style="--rotate: 0.5turn">
                 <div class="simon-btn-light blue d-none"></div>
-                <div class="simon-btn blue"></div>
+                <div class="simon-btn blue" id="blue"></div>
               </div>
-              <div class="simon-center"></div>
+              <div class="simon-center" id="simon-center">
+                <div class="simon-btn-start" id="simon-btn-start">
+                  <span class="opacity-75"> Iniciar </span>
+                </div>
+              </div>
             </div>
           </div>
         </section>
@@ -120,6 +131,6 @@
       integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
       crossorigin="anonymous"
     ></script>
-    <script src="js/simon.js"></script>
+    <script type="module" src="js/simon.js"></script>
   </body>
 </html>

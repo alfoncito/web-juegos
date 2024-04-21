@@ -1,3 +1,11 @@
+import {
+  fisherYatesShuffle,
+  swapElements,
+  coinFlip,
+  formatt0,
+  generateUniqueId,
+} from "./utils.js";
+
 const imagesPath = {
   famous: [
     "famoso_1.jpg",
@@ -206,7 +214,7 @@ const createModalBodyHTML = (data = {}) => {
         </tr>
       </tbody>
     </table>
-    <p class="text-second">¿Jugamos otra partida?</p>
+    <p class="text-second text-end">¿Jugamos otra partida?</p>
   `;
 };
 
@@ -243,10 +251,6 @@ const createTimer = ($elem) => {
       return $elem.textContent;
     },
   };
-};
-
-const formatt0 = (num, zeros) => {
-  return `${"0".repeat(zeros)}${num.toString().replace("-", "")}`.slice(-zeros);
 };
 
 const loadCards = async (images, cardsCount, alt = "Una imagen") => {
@@ -308,17 +312,6 @@ const choiseImages = (images, count) => {
   return chosen;
 };
 
-const fisherYatesShuffle = (arr) => {
-  let len = arr.length;
-
-  for (let i = len - 1; i > 0; i--) {
-    let j = Math.floor(Math.random() * (i + 1));
-
-    swapElements(arr, i, j);
-  }
-  return arr;
-};
-
 const cutAndShuffle = (arr, low, high) => {
   if (low === high) return arr;
 
@@ -333,24 +326,6 @@ const cutAndShuffle = (arr, low, high) => {
   cutAndShuffle(arr, low, mid);
   cutAndShuffle(arr, mid + 1, high);
   return arr;
-};
-
-const coinFlip = () => Math.random() > 0.5;
-
-const swapElements = (arr, index1, index2) => {
-  if (
-    index1 < 0 ||
-    index1 >= arr.length ||
-    index2 < 0 ||
-    index2 >= arr.length
-  ) {
-    console.error(
-      "Índices no válidos. Ambos índices deben estar dentro de los límites del array."
-    );
-    return;
-  }
-
-  [arr[index1], arr[index2]] = [arr[index2], arr[index1]];
 };
 
 const memoryCardElement = (srcImg, alt = "") => {
@@ -372,13 +347,6 @@ const memoryCardElement = (srcImg, alt = "") => {
   );
 
   return $col;
-};
-
-const generateUniqueId = () => {
-  const timestamp = Date.now().toString(36),
-    randomNumber = Math.floor(Math.random() * 1000000001);
-
-  return timestamp + "_" + randomNumber;
 };
 
 document.addEventListener("DOMContentLoaded", main);
