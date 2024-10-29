@@ -1,0 +1,32 @@
+{
+  "name": "web-juegos",
+  "version": "0.0.1",
+  "description": "Sitio web de juegos y puzzles",
+  "main": "eleventy.config.js",
+  "type": "module",
+  "dependencies": {
+    "@11ty/eleventy": "^3.0.0",
+    "bootstrap": "^5.3.3",
+    "bootstrap-icons": "^1.11.3"
+  },
+  "devDependencies": {
+    "@11ty/eleventy-plugin-vite": "^5.0.0",
+    "cross-env": "^7.0.3",
+    "sass": "^1.80.4"
+  },
+  "scripts": {
+    "dev": "eleventy --serve --incremental",
+    "build": "rm -rf dist && eleventy --pathprefix=/web-juegos/",
+    "debug": "cross-env DEBUG=Eleventy* eleventy --serve --incremental",
+    "deploy": "",
+    "clean": "rm -rf dist",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "puzzle",
+    "juegos",
+    "canvas"
+  ],
+  "author": "alfoncito",
+  "license": "MIT"
+}

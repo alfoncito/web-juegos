@@ -1,3 +1,7 @@
+import * as bs from 'bootstrap';
+import 'bootstrap/dist/css/bootstrap.min.css';
+import '../css/style.css';
+
 const main = () => {
   handleVisibilityLogo();
 };
@@ -17,4 +21,4 @@ const handleVisibilityLogo = () => {
   handleScrollMove();
 };
 
-document.addEventListener("DOMContentLoaded", main, { once: true });
+document.addEventListener("DOMContentLoaded", main);

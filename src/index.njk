@@ -1,0 +1,78 @@
+---
+layout: base.njk
+title: 'Juegos'
+scripts: ['./js/index.js']
+---
+
+<header class="bg-gradiend text-white">
+  <div class="container">
+    <section
+      class="row align-items-center min-vh-100 text-center"
+    >
+      <div class="col-12 col-md-6 order-md-last">
+        <img
+        	src="assets/img/brain.png"
+        	alt="cerebro"
+        	class="img-fluid"
+        />
+      </div>
+      <div class="col-12 col-md-6">
+        <h1 class="display-1 my-4">Memorio</h1>
+        <p class='opacity-75'>
+          Los juegos de memoria son una forma divertida y efectiva de
+          mantener tu cerebro activo y saludable. Desde clásicos como el
+          Memorama hasta desafíos digitales como el juego de Simón, estos
+          juegos mejoran la concentración y la habilidad para recordar.
+        </p>
+        <a href="#games" class="btn btn-warning btn-lg my-2">
+          ¡Explora nuestra colección!
+        </a>
+      </div>
+    </section>
+  </div>
+</header>
+<nav class="navbar bg-primary px-3 sticky-top mb-5" id="navbar">
+  <a class="navbar-brand" href="/" id="logo">
+    <img
+      src="assets/img/brain.png"
+      alt="cerebro"
+      class="logo"
+      width="30"
+      height="24"
+    />
+  </a>
+  <div>
+    <ul class="navbar-nav">
+      <li class="navbar-item">
+        <a class="navbar-link link" href="/#juegos">Juegos</a>
+      </li>
+    </ul>
+  </div>
+</nav>
+<main class="min-vh-100">
+  <div class="container">
+    <h2
+    	id="juegos"
+    	class="h2 my-3 scroll-margin text-center text-prymary"
+    >
+      Catálogo de juegos
+    </h2>
+    <div class="list-group">
+      <a
+        href="memory-select.html"
+        class="list-group-item list-group-item-action"
+      >
+      	Memoria
+      </a>
+      <a
+        href="/juego-simon.html"
+        class="list-group-item list-group-item-action"
+      >
+        Juego de simón
+      </a>
+    </div>
+  </div>
+</main>
+<footer class="bg-primary text-center py-2 text-white">
+  <p>&copy;Todos los derechos reservados.</p>
+</footer>
