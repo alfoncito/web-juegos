@@ -11,20 +11,25 @@ scripts: ['./js/index.js']
     >
       <div class="col-12 col-md-6 order-md-last">
         <img
-        	src="assets/img/brain.png"
+        	src="assets/img/cerebro-idea.webp"
         	alt="cerebro"
         	class="img-fluid"
         />
       </div>
       <div class="col-12 col-md-6">
-        <h1 class="display-1 my-4">Memorio</h1>
-        <p class='opacity-75'>
-          Los juegos de memoria son una forma divertida y efectiva de
-          mantener tu cerebro activo y saludable. Desde clásicos como el
-          Memorama hasta desafíos digitales como el juego de Simón, estos
-          juegos mejoran la concentración y la habilidad para recordar.
+        <h1 class="display-1 my-4">Memoria</h1>
+        <p class='text-white text-opacity-75'>
+          Los juegos de memoria son una forma divertida y 
+          efectiva de mantener tu cerebro activo y saludable. 
+          Desde clásicos como el Memorama hasta desafíos 
+          digitales como el juego de Simón, estos
+          juegos mejoran la concentración y la habilidad para 
+          recordar.
         </p>
-        <a href="#games" class="btn btn-warning btn-lg my-2">
+        <a
+        	href="#juegos"
+        	class="btn btn-outline-warning btn-lg my-2"
+        >
           ¡Explora nuestra colección!
         </a>
       </div>
@@ -44,7 +49,12 @@ scripts: ['./js/index.js']
   <div>
     <ul class="navbar-nav">
       <li class="navbar-item">
-        <a class="navbar-link link" href="/#juegos">Juegos</a>
+        <a
+        	class="navbar-link link"
+        	href="/#juegos"
+        >
+        	Juegos
+        </a>
       </li>
     </ul>
   </div>
@@ -65,7 +75,7 @@ scripts: ['./js/index.js']
       	Memoria
       </a>
       <a
-        href="/juego-simon.html"
+        href="/juego-simon"
         class="list-group-item list-group-item-action"
       >
         Juego de simón
@@ -73,6 +83,4 @@ scripts: ['./js/index.js']
     </div>
   </div>
 </main>
-<footer class="bg-primary text-center py-2 text-white">
-  <p>&copy;Todos los derechos reservados.</p>
-</footer>
+{% include 'footer.njk' %}

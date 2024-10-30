@@ -1,10 +1,12 @@
+import 'bootstrap/dist/css/bootstrap.min.css';
+import '../css/style.css';
+import '../css/simon.css';
+import Modal from 'bootstrap/js/dist/modal.js';
 import { randBetweenInt } from "./utils.js";
 
-const main = () => {
-  startGame();
-};
-
 const startGame = () => {
+	const MAX_RECORDS = 10;
+	
   let simon = createSimon(),
     score = createScore(),
     modal = createModal(modalBody),
@@ -27,9 +29,7 @@ const startGame = () => {
 
       if (!tryer.correct) {
         document.removeEventListener("click", handleClick);
-        modal.show({
-          score: score.get(),
-        });
+        endGame();
       } else if (tryer.isDone()) {
         document.removeEventListener("click", handleClick);
         score.add();
@@ -48,6 +48,36 @@ const startGame = () => {
     document.addEventListener("click", handleClick);
   };
 
+  const endGame = () => {
+	  let logs = localStorage.getItem('simon-records') ?? '[]',
+	    newLog = {
+				id: uniqueId(),
+				score: score.get(),
+				date: Date.now(),
+				alias: ''
+	    },
+	    maxScore = null;
+
+		logs = JSON.parse(logs);
+		maxScore = Math.max(...logs.map(l => l.score));
+	  logs.push(newLog);
+		logs.sort((la, lb) => lb.score - la.score);
+
+		if (logs.length > MAX_RECORDS)
+			logs.length = 10;
+	  
+	  localStorage.setItem('simon-records',
+			JSON.stringify(logs)
+	  );
+
+		modal.show({
+			logs,
+			currentId: newLog.id,
+			newRecord: newLog.score > maxScore,
+			lastAlias: localStorage.getItem('simon-last-alias')
+		});
+  };
+
   const handleContinue = () => {
     simon.reset();
     score.reset();
@@ -62,9 +92,28 @@ const startGame = () => {
     seeSequence(300);
   };
 
+  const handleClose = ({ alias, id }) => {
+		let logs, log;
+
+		if (!id) return;
+		
+		logs = localStorage.getItem('simon-records');
+		logs = JSON.parse(logs);
+		log = logs.find(l => l.id === id);
+		log.alias = alias;
+
+		if (alias !== '')
+			localStorage.setItem('simon-last-alias', alias);
+
+		localStorage.setItem('simon-records', 
+			JSON.stringify(logs)
+		);
+  };
+
   btnStart.onclick(handleClickStart);
   modal.onContinue(handleContinue);
   modal.onExit(handleExit);
+  modal.onClose(handleClose);
 };
 
 const createSimon = () => {
@@ -230,15 +279,25 @@ const createScore = () => {
 
 const createModal = (functBody) => {
   let $modal = document.getElementById("modal"),
-    bsModal = new bootstrap.Modal($modal, {
+    bsModal = new Modal($modal, {
       backdrop: false,
     }),
     cbContinue,
-    cbExit;
+    cbExit,
+    cbClose;
 
   $modal.addEventListener("click", (e) => {
     if (e.target.id === "modal-continue") cbContinue?.();
     else if (e.target.id === "modal-exit") cbExit?.();
+  });
+
+  $modal.addEventListener('hide.bs.modal', () => {
+		let $input = document.getElementById('input-alias');
+
+		cbClose?.({
+			alias: $input?.value,
+			id: $input?.dataset.id
+		});
   });
 
   return {
@@ -248,54 +307,147 @@ const createModal = (functBody) => {
     onExit(cb) {
       cbExit = cb;
     },
+    onClose(cb) {
+			cbClose = cb;
+    },
     show(data) {
-      let $modalBody = document.querySelector(".modal-body");
+      let $modalBody = document.querySelector(".modal-body"),
+      	$input;
 
       $modalBody.innerHTML = "";
-      $modalBody.insertAdjacentHTML("afterbegin", functBody(data ?? {}));
+      $modalBody.insertAdjacentHTML("afterbegin", functBody(data));
+      $input = document.getElementById('input-alias');
+      
+      if ($input) {
+				let boundInput = $input.getBoundingClientRect(),
+					$container = document.getElementById('table-container'),
+					boundContainer = $container.getBoundingClientRect(),
+					topRelative = boundInput.top - boundContainer.top;
+
+				$container.scrollTo(0, topRelative);
+				$input.focus();
+      }
       bsModal.show();
     },
   };
 };
 
 const modalBody = (data) => {
-  let record = localStorage.getItem("simon-record") ?? 0,
-    bannerHtml = `
-      <div class="bg-primary py-2 my-2 rounded">
-        <h3 class="text-white display-6 text-center fw-b">¡Felicidades, nuevo record!</h3>
-      </div>
-    `;
-
-  localStorage.setItem("simon-record", Math.max(data.score, record));
   return `
-  <img 
-    src="img/cerebro-asustado.webp" 
-    alt="Cerebro asustado" 
-    class="d-block w-75 mx-auto"
-  >
-  <p class="text-end">
+  	${data.newRecord ? createBannerHtml() : ""}
+	  <img
+	    src="../assets/img/cerebro-${
+	    	data.newRecord ? "feliz" : "asustado"
+	    }.webp" 
+	    alt="Cerebro de fin de juego" 
+	    class="d-block w-50 mx-auto"
+	  >
+	  <p class="text-end">
       <small>
         <a 
           href="https://www.freepik.es/vector-gratis/coleccion-personajes-cerebro-humano-que-tienen-idea-creativa-bailan-regocijan-asustan_35159597.htm#fromView=search&page=1&position=36&uuid=91ccbe86-8941-4885-aad0-db2d3b66883e" 
           target="_blank"
-          class="link-secondary"
+          class="link-secondary text-decoration-none"
         >
           Imagen de pch.vector en Freepik
         </a>
       </small>
     </p>
-  ${data.score > record ? bannerHtml : ""}
-  <table class="table">
-    <tbody>
-      <tr>
-        <td scope="row" class="fw-bold">Puntuación</th>
-        <td>${data.score ?? "0"}</td>
-      </tr>
-    </tbody>
-  </table>
-    <p class="text-prymary text-end">¿Jugamos otra partida?</p>
+    <div class='simon-logs-table-container' id='table-container'>
+		  <table class="table" id='logs-table'>
+		  	<thead class='sticky-top'>
+		  		<th
+		  			class='bg-body-secondary text-dark text-opacity-75'
+		  		>
+		  			#
+		  		</th>
+		  		<th
+		  			class='bg-body-secondary text-dark text-opacity-75'
+		  		>
+		  			Alias
+		  		</th>
+		  		<th
+		  			class='bg-body-secondary text-dark text-opacity-75'
+		  		>
+		  			Puntuación
+		  		</th>
+		  		<th
+		  			class='bg-body-secondary text-dark text-opacity-75'
+		  		>
+		  			Fecha
+		  		</th>
+		  	</thead>
+		    <tbody>
+		      ${createTableRecords(data)}
+		    </tbody>
+		  </table>
+		</div>
+    <p class="text-prymary text-center">
+    	¿Jugamos otra partida?
+    </p>
   `;
 };
+
+const uniqueId = () => {
+	let date = Date.now(),
+		hash = Math.random().toString(36).substr(2, 9);
+	
+  return `id-${date}-${hash}`;
+};
+
+const createTableRecords = (data) => {
+	let rows = [];
+	
+	data.logs.forEach((log, index) => {
+		let date = new Date(log.date),
+			tdClass = log.id === data.currentId ? 'bg-primary-subtle' : '',
+			dateFormatted = '';
+
+		dateFormatted += `${date.getDate()}-`;
+		dateFormatted += `${date.getMonth()}-`;
+		dateFormatted += `${date.getFullYear()} `;
+		dateFormatted += `${date.getHours()}:`;
+		dateFormatted += `${date.getMinutes()}`;
+		
+		rows.push(`
+			<tr>
+				<td class='${tdClass} fw-bold'>${index + 1}</td>
+        <td class='${tdClass}'>
+        	${
+						log.id === data.currentId
+							? `
+								<input
+									data-id='${log.id}'
+									id='input-alias'
+									type='text'
+									class='form-control p-1 w-25'
+									maxLength='3'
+									placeholder='abc'
+									value='${data.lastAlias}'
+									autofocus
+								/>
+							`
+        			: (log.alias || 'abc') 
+        	}
+        </td>
+        <td class='${tdClass}'>${log.score}</td>
+        <td class='${tdClass} text-black text-opacity-50 text-truncate'>
+        	${dateFormatted}
+        </td>
+      </tr>
+		`);
+	});
+	
+	return rows.join('');
+};
+
+const createBannerHtml = () =>  `
+  <div class="bg-primary py-2 my-2 rounded">
+    <h3 class="text-white display-6 text-center fw-b">
+    	¡Felicidades, nuevo record!
+    </h3>
+  </div>
+`;
 
 const createBtnStart = () => {
   let $btn = document.getElementById("simon-btn-start"),
@@ -321,6 +473,8 @@ const createBtnStart = () => {
   };
 };
 
-const wait = (time) => new Promise((res) => setTimeout(res, time));
+const wait = (time) => {
+	return new Promise((res) => setTimeout(res, time))
+};
 
-document.addEventListener("DOMContentLoaded", main);
+document.addEventListener("DOMContentLoaded", startGame);
