@@ -5,7 +5,6 @@ export default (eleventyConfig) => {
 	eleventyConfig.addPlugin(EleventyVitePlugin, {
 		tempFolderName: '.11ty-vite',
 		viteOptions: {
-			publicDir: 'src/public',
 			clearScreen: false,
 			appType: 'custom',
 			server: {
@@ -16,7 +15,7 @@ export default (eleventyConfig) => {
 			},
 			build: {
 				mode: 'production',
-				sourcemap: true,
+				sourcemap: 'true',
 				manifest: true,
 				rollupOptions: {
 					input: 'src/js/index.js'

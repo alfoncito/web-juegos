@@ -1,7 +1,35 @@
 ---
-layout: base.njk
+layout: 'base.njk'
 title: 'Juegos'
-scripts: ['./js/index.js']
+scripts: ['/js/index.js']
+games: [
+	{
+		title: 'Memoria',
+		href: '/memoria/',
+		icon: 'bi-memory',
+		id: 'memory-link'
+	},
+	{
+		title: 'Juego de Simón',
+		href: '/juego-simon/',
+		icon: 'bi-question-circle'
+	}
+]
+memoryTypes: ['Famosos']
+memoryDificulty: [
+	{
+		content: 'Facil',
+		icon: 'bi-emoji-smile-fill'
+	},
+	{
+		content: 'Medio',
+		icon: 'bi-emoji-neutral-fill'
+	},
+	{
+		content: 'Dificil',
+		icon: 'bi-emoji-angry-fill'
+	}
+]
 ---
 
 <header class="bg-gradiend text-white">
@@ -17,8 +45,8 @@ scripts: ['./js/index.js']
         />
       </div>
       <div class="col-12 col-md-6">
-        <h1 class="display-1 my-4">Memoria</h1>
-        <p class='text-white text-opacity-75'>
+        <h1 class="display-1 mt-4 mb-3">Memoria</h1>
+        <p class="text-white text-opacity-75 mb-5">
           Los juegos de memoria son una forma divertida y 
           efectiva de mantener tu cerebro activo y saludable. 
           Desde clásicos como el Memorama hasta desafíos 
@@ -26,61 +54,41 @@ scripts: ['./js/index.js']
           juegos mejoran la concentración y la habilidad para 
           recordar.
         </p>
-        <a
-        	href="#juegos"
-        	class="btn btn-outline-warning btn-lg my-2"
-        >
-          ¡Explora nuestra colección!
-        </a>
       </div>
     </section>
   </div>
 </header>
-<nav class="navbar bg-primary px-3 sticky-top mb-5" id="navbar">
-  <a class="navbar-brand" href="/" id="logo">
-    <img
-      src="assets/img/brain.png"
-      alt="cerebro"
-      class="logo"
-      width="30"
-      height="24"
-    />
-  </a>
-  <div>
-    <ul class="navbar-nav">
-      <li class="navbar-item">
-        <a
-        	class="navbar-link link"
-        	href="/#juegos"
-        >
-        	Juegos
-        </a>
-      </li>
-    </ul>
-  </div>
-</nav>
-<main class="min-vh-100">
-  <div class="container">
+
+{% include 'modal-memory-select.njk' %}
+
+<main class="min-vh-100 bg-body-secondary">
+  <div class="container py-1">
     <h2
     	id="juegos"
-    	class="h2 my-3 scroll-margin text-center text-prymary"
+    	class="h2 my-4 scroll-margin text-center text-prymary"
     >
       Catálogo de juegos
     </h2>
-    <div class="list-group">
-      <a
-        href="memory-select.html"
-        class="list-group-item list-group-item-action"
-      >
-      	Memoria
-      </a>
-      <a
-        href="/juego-simon"
-        class="list-group-item list-group-item-action"
-      >
-        Juego de simón
-      </a>
+    <div class="row">
+			{% for game in games %}
+				<div class="col">
+					<div class="card border">
+						<div class="card-body">
+							<a
+				        href="{{ game.href }}"
+				        class="link link-primary text-decoration-none d-inline-flex align-items-center"
+				        {% if game.id %} id="{{ game.id }}" {% endif %}
+				      >
+				      	<i class="bi {{ game.icon }} fs-1 d-inline-block mx-3">
+				      	</i>
+				      	{{ game.title }}
+				      </a>
+				    </div>
+			    </div>
+			  </div>
+			{% endfor %}
     </div>
   </div>
 </main>
+
 {% include 'footer.njk' %}

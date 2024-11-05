@@ -1,0 +1,94 @@
+<div
+  class="modal fade"
+  id="modal-memory-select"
+  tabindex="-1"
+  aria-labelledby="Modal de leccion de nivel de memoria"
+  aria-hidden="true"
+  data-bs-backdrop="static"
+>
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content bg-body-secondary">
+      <div
+      	class="modal-header justify-content-center border-0 pb-0"
+      >
+        <h5	class="modal-title text-secondary">
+          Juego de memoria
+        </h5>
+        <button
+        	type="buttom"
+        	class="btn-close"
+        	data-bs-dismiss="modal"
+        	aria-label="close"
+        ></button>
+      </div>
+      <div class="modal-body">
+				<div id="carousel-memory-select" class="carousel slide">
+					<div class="carousel-inner">
+						<div class="carousel-item active">
+							<div
+								class="row justify-content-center text-center py-4"
+							>
+								{% for type in memoryTypes %}
+									<div class="col">
+										<button
+											class="btn-memory-select js-btn-memory"
+											type="button"
+											data-type="{{ type }}"
+										>
+											{{ type }}
+										</button>
+									</div>
+								{% endfor %}
+							</div>
+							<div class="text-center">
+								<button
+									type="button"
+									id="btn-next-1"
+									class="btn btn-outline-success"
+									disabled
+								>
+									Siguiente
+								</button>
+							</div>
+						</div>
+						<div class="carousel-item vh-75">
+							<div
+								class="row justify-content-center text-center py-4"
+							>
+								{% for level in memoryDificulty %}
+									<div class="col">
+										<button
+											class="btn-memory-select js-btn-memory"
+											type="button"
+											data-dificulty="{{ level.content }}"
+										>
+											{{ level.content }}
+										</button>
+									</div>
+								{% endfor %}
+							</div>
+							<div class="text-center">
+								<button
+									type="button"
+									id="btn-prev"
+									class="btn btn-outline-secondary mx-2"
+								>
+									Tematica
+								</button>
+								<button
+									type="button"
+									id="btn-next-2"
+									class="btn btn-outline-success mx-2"
+									disabled
+								>
+									¡A jugar!
+								</button>
+							</div>
+						</div>
+					</div>
+				</div>
+      </div>
+    </div>
+  </div>
+</div>
+

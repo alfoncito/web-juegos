@@ -1,3 +1,7 @@
+import 'bootstrap/dist/css/bootstrap.min.css';
+import '../css/style.css';
+import '../css/memory.css';
+import Modal from 'bootstrap/js/dist/modal.js';
 import {
   fisherYatesShuffle,
   swapElements,
@@ -7,7 +11,7 @@ import {
 } from "./utils.js";
 
 const imagesPath = {
-  famous: [
+  famosos: [
     "famoso_1.jpg",
     "famoso_2.webp",
     "famoso_3.jpg",
@@ -41,13 +45,9 @@ const imagesPath = {
     "famoso_31.webp",
     "famoso_32.jpg",
   ],
-  cars: [],
-  mushrooms: [],
-  millionaires: [],
-};
-
-const main = () => {
-  startGame();
+  carros: [],
+  hongos: [],
+  millonarios: [],
 };
 
 const startGame = () => {
@@ -63,21 +63,21 @@ const startGame = () => {
   const init = () => {
     let $container = document.getElementById("memory-container"),
       searchParams = new URL(location.href).searchParams,
-      dificulty = searchParams.get("dificulty"),
-      images = imagesPath[searchParams.get("type")],
+      dificulty = searchParams.get("dificultad"),
+      images = imagesPath[searchParams.get("tematica")],
       $loader = createLoader();
 
     movements = 0;
     switch (dificulty) {
-      case "easy":
+      case "facil":
         remaining = 8;
         $container.classList.add("row-cols-4");
         break;
-      case "medium":
+      case "medio":
         remaining = 15;
         $container.classList.add("row-cols-6");
         break;
-      case "hard":
+      case "dificil":
         remaining = 18;
         $container.classList.add("row-cols-6");
         break;
@@ -90,6 +90,7 @@ const startGame = () => {
     renderRemaining();
     timer.reset();
     $container.appendChild($loader);
+    images = images.map(img => `../assets/img/${img}`);
     loadCards(images, remaining).then(($cards) => {
       $loader.remove();
       $container.appendChild($cards);
@@ -100,7 +101,10 @@ const startGame = () => {
   const handleClick = (e) => {
     if (
       !isBusyHand &&
-      (e.target.matches(".memory-card") || e.target.matches(".memory-card *"))
+      (
+      	e.target.matches(".memory-card") ||
+      	e.target.matches(".memory-card *")
+      )
     ) {
       let $card = e.target.closest(".memory-card");
 
@@ -110,13 +114,11 @@ const startGame = () => {
       if ($hand) {
         addMovement();
         if ($card.dataset.id === $hand.dataset.id) {
-          console.log("Match, hurra!!!");
           subtractRemaining();
           if (remaining === 0) win();
         } else {
           let $otherHand = $hand;
 
-          console.log("Sorry, no hay coincidencia");
           isBusyHand = true;
           setTimeout(() => {
             isBusyHand = false;
@@ -162,10 +164,7 @@ const startGame = () => {
 const createWinModal = () => {
   let $modalElm = document.getElementById("modal-win"),
     $modalBody = document.querySelector(".modal-body"),
-    opts = {
-      backdrop: false,
-    },
-    modal = new bootstrap.Modal($modalElm, opts),
+    modal = new Modal($modalElm, { backdrop: false }),
     cbContinue,
     cbExit;
 
@@ -180,7 +179,10 @@ const createWinModal = () => {
 
   return {
     show(data) {
-      $modalBody.insertAdjacentHTML("afterbegin", createModalBodyHTML(data));
+      $modalBody.insertAdjacentHTML(
+      	"afterbegin",
+      	createModalBodyHTML(data)
+      );
       modal.show();
     },
     onContinue(cb) {
@@ -194,7 +196,11 @@ const createWinModal = () => {
 
 const createModalBodyHTML = (data = {}) => {
   return `
-    <img class="w-75 d-block mx-auto" src="/img/celebracion.jpg" alt="Felicidades">
+    <img
+    	class="w-75 d-block mx-auto"
+    	src="../assets/img/celebracion.jpg"
+    	alt="Felicidades"
+    />
     <p class="text-end text-secondary">
       <small>
         <a href="https://www.freepik.es/vector-gratis/gente-feliz-bailando-fiesta-juntos-plantilla-web-dibujos-animados-emocionados-amigos-o-companeros-trabajo-celebrando-confeti_10581753.htm#query=celebracion%20logros&position=20&from_view=keyword&track=ais&uuid=d23d0f6f-d269-4ea2-a125-e2913e1870a8">
@@ -221,7 +227,10 @@ const createModalBodyHTML = (data = {}) => {
 const createLoader = () => {
   let $loader = document.createElement("div");
 
-  $loader.classList.add("loader", "position-absolute", "top-50", "start-50");
+  $loader.classList.add(
+  	"loader", "position-absolute",
+  	"top-50", "start-50"
+  );
   return $loader;
 };
 
@@ -253,7 +262,11 @@ const createTimer = ($elem) => {
   };
 };
 
-const loadCards = async (images, cardsCount, alt = "Una imagen") => {
+const loadCards = async (
+	images,
+	cardsCount,
+	alt = "Una imagen"
+) => {
   let paths = choiseImages(images, cardsCount),
     urls = await loadImages(paths),
     cards = [],
@@ -307,7 +320,8 @@ const choiseImages = (images, count) => {
   indexes.forEach((value, index) => (indexes[index] = index));
   indexes = fisherYatesShuffle(indexes);
 
-  for (let i = 0; i < count; i++) chosen[i] = `/img/${images[indexes.pop()]}`;
+  for (let i = 0; i < count; i++)
+  	chosen[i] = `/img/${images[indexes.pop()]}`;
 
   return chosen;
 };
@@ -320,7 +334,8 @@ const cutAndShuffle = (arr, low, high) => {
   if (coinFlip()) {
     let diff = mid - low;
 
-    for (let i = 0; i <= diff; i++) swapElements(arr, low + i, high - i);
+    for (let i = 0; i <= diff; i++)
+    	swapElements(arr, low + i, high - i);
   }
 
   cutAndShuffle(arr, low, mid);
@@ -349,4 +364,4 @@ const memoryCardElement = (srcImg, alt = "") => {
   return $col;
 };
 
-document.addEventListener("DOMContentLoaded", main);
+document.addEventListener("DOMContentLoaded", startGame);

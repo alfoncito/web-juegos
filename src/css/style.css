@@ -16,6 +16,11 @@ body {
   padding: 0;
 }
 
+input[type="button"],
+button {
+	cursor: pointer !important;
+}
+
 /* *********************** Bootstrap styles ********************** */
 
 .bg-body-secondary {
@@ -71,17 +76,37 @@ body {
 }
 
 .bg-gradiend {
-  background-image: linear-gradient(
-    #9e0059,
-    #940066,
-    #830076,
-    #690087,
-    #390099
-  );
+	background-image: radial-gradient(
+		ellipse at center center,
+		hsl(30, 80%, 70%),
+		hsl(15, 45%, 30%) 80%
+	);
 }
 
 .bg-primary {
   background-color: var(--first-color) !important;
+}
+
+.btn-memory-select {
+	border: none;
+	display: inline-block;
+	font-size: 1.5rem;
+	height: 5rem;
+	width: min(10rem, 100%);
+	border-radius: var(--bs-border-radius);
+	color: var(--bs-gray-700);
+	transform-origin: center;
+	transition: transform ease-out 100ms;
+}
+
+.btn-memory-select:hover,
+.btn-memory-select.selected {
+	border: 2px solid hsl(25, 60%, 60%);
+	color: var(--bs-gray-900);
+}
+
+.btn-memory-select:active {
+	transform: scaleX(1.05) scaleY(0.95);
 }
 
 .btn-dificulty-active,
@@ -123,71 +148,6 @@ body {
 
 .scroll-margin {
   scroll-margin-top: 6ex;
-}
-
-.memory-card {
-  transform-style: preserve-3d;
-  cursor: pointer;
-  transition: transform 500ms ease-out;
-}
-
-.flip {
-  transform: rotateY(180deg);
-}
-
-.memory-card-side-down {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: var(--fourth-color);
-  backface-visibility: hidden;
-}
-
-.perspective {
-  perspective: 800px;
-}
-
-.text-prymary {
-  color: var(--first-color);
-}
-
-.text-second {
-  color: var(--second-color);
-}
-
-.timer {
-  font-size: calc(1.375rem + 1.5vw);
-  font-weight: bold;
-  line-height: 1.2;
-}
-
-.memory-tag {
-  display: flex;
-  align-items: center;
-}
-
-.loader {
-	--_m: conic-gradient(#0000 10%, #000),
-  	linear-gradient(#000 0 0) content-box;
-  	
-  width: 50px;
-  padding: 8px;
-  aspect-ratio: 1;
-  border-radius: 50%;
-  background: var(--first-color);
-  -webkit-mask: var(--_m);
-  mask: var(--_m);
-  -webkit-mask-composite: source-out;
-  mask-composite: subtract;
-  animation: l3 1s infinite linear;
-}
-
-@keyframes l3 {
-  to {
-    transform: rotate(1turn);
-  }
 }
 
 /* X-Small devices (portrait phones, less than 576px)
