@@ -1,6 +1,6 @@
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap-icons/font/bootstrap-icons.min.css';
-import '/css/style.css';
+import '../css/style.css';
 import Modal from 'bootstrap/js/dist/modal.js';
 import Carousel from 'bootstrap/js/dist/carousel.js';
 

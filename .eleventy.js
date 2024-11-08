@@ -1,12 +1,19 @@
 import EleventyVitePlugin from '@11ty/eleventy-plugin-vite';
-import { EleventyHtmlBasePlugin } from '@11ty/eleventy';
+// import { EleventyHtmlBasePlugin } from '@11ty/eleventy';
 
 export default (eleventyConfig) => {
+	eleventyConfig.addPassthroughCopy('src/assets');
+	// eleventyConfig.addWatchTarget('src/js');
+	// eleventyConfig.addWatchTarget('src/css');
+	eleventyConfig.addPassthroughCopy('src/js');
+	eleventyConfig.addPassthroughCopy('src/css');
+	
 	eleventyConfig.addPlugin(EleventyVitePlugin, {
 		tempFolderName: '.11ty-vite',
 		viteOptions: {
 			clearScreen: false,
-			appType: 'custom',
+			appType: 'mpa',
+			logLevel: 'warn',
 			server: {
 				open: '/',
 				hmr: true,
@@ -14,17 +21,18 @@ export default (eleventyConfig) => {
 				middlewareMode: true
 			},
 			build: {
+				emptyOutDir: true,
 				mode: 'production',
-				sourcemap: 'true',
+				sourcemap: 'inline',
 				manifest: true,
-				rollupOptions: {
-					input: 'src/js/index.js'
-				},
+				rollupOptions: {},
 				watch: {
+					/*
 					chokidar: {
 						usePolling: true
 					},
-					include: 'src/**' //*/
+					*/
+					// include: 'src/**' //*/
 				}
 			},
 			optimizeDeps: {
@@ -33,12 +41,7 @@ export default (eleventyConfig) => {
 			}
 		}
 	});
-	eleventyConfig.addPlugin(EleventyHtmlBasePlugin);
-	eleventyConfig.addPassthroughCopy('src/assets');
-	eleventyConfig.addWatchTarget('src/js');
-	eleventyConfig.addWatchTarget('src/css');
-	eleventyConfig.addPassthroughCopy('src/js');
-	eleventyConfig.addPassthroughCopy('src/css');
+	// eleventyConfig.addPlugin(EleventyHtmlBasePlugin);
 
 	eleventyConfig.setServerOptions({
 		liveReload: true,
@@ -46,6 +49,7 @@ export default (eleventyConfig) => {
 	});
 
 	return {
+		templateFormats: ['njk', 'html'],
 		htmlTemplateEngine: 'njk',
 		passthroughFileCopy: true,
 		dir: {
@@ -57,3 +61,4 @@ export default (eleventyConfig) => {
 		}
 	};
 };
+ 
