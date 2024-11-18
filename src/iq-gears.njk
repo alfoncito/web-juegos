@@ -1,0 +1,19 @@
+---
+layout: 'game.njk'
+title: 'IQ GEARS'
+permalink: '/iq-gears/'
+scripts: ['../js/iq-gears.js']
+---
+
+<h1>Mi nuevo juego iq gears</h1>
+
+<section class="gear-board">
+	{% for i in range(0, 25) %}
+		<div
+			id="gear-cell-{{i}}"
+			class="cell js-gear-cell"
+		>
+				{{ i }}
+		</div>
+	{% endfor %}
+</section>

@@ -1,0 +1,16 @@
+.section-game {
+	padding: .5rem;
+}
+
+.gear-board {
+	width: 500px;
+	height: 500px;
+	border: thin solid black;
+	display: grid;
+	grid-template-columns: repeat(5, 1fr);
+	grid-template-rows: repeat(5, 1fr);
+}
+
+.gear-board > .cell {
+	border: thin solid #aaa;
+}

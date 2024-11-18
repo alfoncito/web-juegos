@@ -7,7 +7,8 @@
   "dependencies": {
     "@11ty/eleventy": "^3.0.0",
     "bootstrap": "^5.3.3",
-    "bootstrap-icons": "^1.11.3"
+    "bootstrap-icons": "^1.11.3",
+    "gsap": "^3.12.5"
   },
   "devDependencies": {
     "@11ty/eleventy-plugin-vite": "^5.0.0",
@@ -20,6 +21,7 @@
     "build-local": "npm run clean && eleventy",
     "debug": "cross-env DEBUG=Eleventy* eleventy --serve --incremental",
     "watch": "eleventy --watch",
+    "preview": "vite preview dist",
     "deploy": "",
     "clean": "rm -rf dist && rm -rf .11ty-vite",
     "test": "echo \"Error: no test specified\" && exit 1"

@@ -1,0 +1,18 @@
+[
+	{
+		"title": "Memoria",
+		"href": "/memoria/",
+		"icon": "bi-memory",
+		"id": "memory-link"
+	},
+	{
+		"title": "Juego de Simón",
+		"href": "/juego-simon/",
+		"icon": "bi-question-circle"
+	},
+	{
+		"title": "IQ gears",
+		"href": "/iq-gears/",
+		"icon": "bi-gear"
+	}
+]

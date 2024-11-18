@@ -2,15 +2,17 @@ import EleventyVitePlugin from '@11ty/eleventy-plugin-vite';
 // import { EleventyHtmlBasePlugin } from '@11ty/eleventy';
 
 export default (eleventyConfig) => {
-	eleventyConfig.addPassthroughCopy('src/assets');
+	// eleventyConfig.addPassthroughCopy('src/assets');
 	// eleventyConfig.addWatchTarget('src/js');
 	// eleventyConfig.addWatchTarget('src/css');
 	eleventyConfig.addPassthroughCopy('src/js');
 	eleventyConfig.addPassthroughCopy('src/css');
+	eleventyConfig.addPassthroughCopy('public');
 	
 	eleventyConfig.addPlugin(EleventyVitePlugin, {
 		tempFolderName: '.11ty-vite',
 		viteOptions: {
+			publicDir: 'public',
 			clearScreen: false,
 			appType: 'mpa',
 			logLevel: 'warn',
@@ -23,9 +25,15 @@ export default (eleventyConfig) => {
 			build: {
 				emptyOutDir: true,
 				mode: 'production',
-				sourcemap: 'inline',
+				sourcemap: true,
 				manifest: true,
-				rollupOptions: {},
+				rollupOptions: {
+					output: {
+						assetFileNames: 'css/[name]-[hash].[ext]',
+						chunkFileNames: 'js/[name]-[hash].js',
+						entryFileNames: 'js/[name]-[hash].js'
+					}
+				},
 				watch: {
 					/*
 					chokidar: {

@@ -41,3 +41,46 @@ export const generateUniqueId = () => {
 export const randBetweenInt = (min, max) => {
   return Math.round(min + (max - min) * Math.random());
 };
+
+export const angle = (x, y) => {
+	let a = Math.atan(y / x);
+
+	return radToDeg(a);
+};
+
+export const radToDeg = (rad) => {
+	return 180 / Math.PI * rad; 
+};
+
+export const iteratorMultiArray = (multiArray) => {
+	let indexes = [0];
+	
+	return {
+		[Symbol.iterator]() {
+			return {
+				next() {
+					while (indexes.length > 0) {
+						let item = multiArray;
+						
+						for (let i = 0; i < indexes.length; i++)
+							item = item[indexes[i]];
+
+						if (Array.isArray(item)) {
+							indexes.push(0);
+						} else if (item === undefined) {
+							indexes.pop();
+							if (indexes.length > 0)
+								indexes[indexes.length - 1]++;
+						} else {
+							indexes[indexes.length - 1]++;
+
+							return { done: false, value: item };
+						}
+					}
+
+					return { done: true };
+				}
+			};
+		}
+	};
+};

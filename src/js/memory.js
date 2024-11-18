@@ -90,7 +90,7 @@ const startGame = () => {
     renderRemaining();
     timer.reset();
     $container.appendChild($loader);
-    images = images.map(img => `../assets/img/${img}`);
+    images = images.map(img => `/assets/img/${img}`);
     loadCards(images, remaining).then(($cards) => {
       $loader.remove();
       $container.appendChild($cards);
@@ -321,7 +321,7 @@ const choiseImages = (images, count) => {
   indexes = fisherYatesShuffle(indexes);
 
   for (let i = 0; i < count; i++)
-  	chosen[i] = `/img/${images[indexes.pop()]}`;
+  	chosen[i] = `${images[indexes.pop()]}`;
 
   return chosen;
 };
