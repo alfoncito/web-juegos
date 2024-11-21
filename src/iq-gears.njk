@@ -5,15 +5,26 @@ permalink: '/iq-gears/'
 scripts: ['../js/iq-gears.js']
 ---
 
-<h1>Mi nuevo juego iq gears</h1>
-
-<section class="gear-board">
-	{% for i in range(0, 25) %}
+<section>
+	<section class="gear-board mx-auto">
+		{% for i in range(0, 25) %}
+			<div
+				id="gear-cell-{{i}}"
+				class="cell js-gear-cell"
+			>
+			</div>
+		{% endfor %}
+	</section>
+	<section>
 		<div
-			id="gear-cell-{{i}}"
-			class="cell js-gear-cell"
+			id="gears-pieces-container"
+			class="border d-flex flex-wrap justify-content-center p-3 my-3"
 		>
-				{{ i }}
+			{% for i in range(0, 7) %}
+				<div
+					class="js-gears-piece-target border m-1"
+				></div>
+			{% endfor %}
 		</div>
-	{% endfor %}
+	</section>
 </section>

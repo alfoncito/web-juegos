@@ -1,3 +1,7 @@
+html {
+	user-select: none;
+}
+
 .section-game {
 	padding: .5rem;
 }
@@ -13,4 +17,37 @@
 
 .gear-board > .cell {
 	border: thin solid #aaa;
+}
+
+.gears-container {
+	position: relative;
+}
+
+.gears-container__controls {
+	position: absolute;
+	z-index: 10;
+	top: 0;
+	left: 0;
+	transform: translateY(-100%);
+	visibility: hidden;
+	opacity: 0;
+}
+
+.gears-container.selected .gears-container__controls {
+	visibility: visible;
+	opacity: 1;
+}
+
+.gears-container__pieces {
+	display: grid;
+	grid-template-columns: repeat(3, 1fr);
+	grid-template-rows: repeat(3, 1fr);
+	cursor: grab;
+	height: 100%;
+	font-size: 2rem;
+	text-align: center;
+}
+
+.gear-cell {
+	cursor: inherit;
 }

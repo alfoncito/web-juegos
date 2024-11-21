@@ -52,6 +52,10 @@ export const radToDeg = (rad) => {
 	return 180 / Math.PI * rad; 
 };
 
+export const degToRad = (deg) => {
+	return Math.PI / 180 * deg;
+};
+
 export const iteratorMultiArray = (multiArray) => {
 	let indexes = [0];
 	
