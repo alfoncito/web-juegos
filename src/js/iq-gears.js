@@ -6,17 +6,37 @@ import {
 	angle,
 	iteratorMultiArray,
 	generateUniqueId,
-	degToRad
+	degToRad,
+	distance
 } from '../js/utils.js';
 import { gsap } from 'gsap';
+
+const CELL_CHECK_PATH = {
+	['0:0']: ['up', 'left'],
+	['0:1']: ['up'],
+	['0:2']: ['up', 'right'],
+	['1:0']: ['left'],
+	['1:1']: [],
+	['1:2']: ['right'],
+	['2:0']: ['down', 'left'],
+	['2:1']: ['down'],
+	['2:2']: ['down', 'right']	
+};
 
 const startGame = () => {
 	let gearCells = createGearCells(),
 		gearPieces = createPiecesBoard(),
-		currentGearPiece = null,
-		inPiecesZone = false;
+		currentGearPiece = null;
 
 	const handleMouseDown = (e) => {
+		if (
+			e.target.matches('.cell:has(.gear)') ||
+			e.target.matches('.cell .gear')
+		) {
+			takeAwayPiece(e);
+			return;
+		}
+		
 		for (let gp of gearPieces) {
 			if (!gp.isChild(e.target)) continue;
 			if (gp.ignoreMouseDown(e)) break;
@@ -40,11 +60,13 @@ const startGame = () => {
 	}
 
 	const handleMouseUp = (e) => {
-		if (currentGearPiece) {
-			currentGearPiece.onMouseUp(e);
-			if (isInGearsPiecesZone(e))
-				restoreGearPieces();
-		}
+		if (!currentGearPiece) return;
+		
+		currentGearPiece.onMouseUp(e);
+		if (isInGearsPiecesZone(e))
+			restoreGearPieces();
+		else if (canInsertPieces())
+			insertPieces();
 	}
 
 	const handleClick = (e) => {
@@ -53,6 +75,32 @@ const startGame = () => {
 			currentGearPiece.onClick(e);
 		else
 			restoreGearPieces();
+	};
+
+	const takeAwayPiece = (e) => {
+		let cellElement = e.target.closest('.cell'),
+			cell = findCellByElement(cellElement),
+			gearsContainer = cell.gear.container,
+			[row, col] = gearsContainer.getPositionByGear(cell.gear),
+			cellBound = cellElement.getBoundingClientRect();
+
+		gearsContainer.restore(
+			e,
+			Math.abs(e.clientX - cellBound.x) + col * 100,
+			Math.abs(e.clientY - cellBound.y) + row * 100
+		);
+		currentGearPiece = gearsContainer;
+		document.body.appendChild(
+			currentGearPiece.element
+		);
+	};
+
+	const findCellByElement = (element) => {
+		for (let cell of gearCells)
+			if (cell.element === element)
+				return cell;
+
+		return null;
 	};
 
 	const restoreGearPieces = () => {
@@ -96,6 +144,68 @@ const startGame = () => {
 		);
 	};
 
+	const insertPieces = () => {
+		let mainCell = getNearCell();
+
+		currentGearPiece.clear();
+		currentGearPiece.each((gear, row, col) => {
+			let pathAtt = `${row}:${col}`,
+				path = CELL_CHECK_PATH[pathAtt],
+				cell = mainCell;
+
+			path.forEach((p) => {
+				cell = cell.siblings[p];
+			});
+			cell.insert(gear);
+		});
+		currentGearPiece = null;
+	};
+
+	const canInsertPieces = () => {
+		let mainCell = getNearCell(),
+			gears;
+
+		if (!mainCell) return false;
+
+		gears = currentGearPiece.eachGenerator();
+		for (let [gear, row, col] of gears) {
+			let pathAtt = `${row}:${col}`,
+				path = CELL_CHECK_PATH[pathAtt],
+				cell = mainCell;
+
+				for (let p of path)
+					cell = cell?.siblings[p];
+
+				if (!cell || !cell.isEmpty)
+					return false;
+		}
+		return true;
+	};
+
+	const getNearCell = () => {
+		let boundCenter = currentGearPiece
+				.elementCenter.getBoundingClientRect(),
+			nearCell = null,
+			shortDistance = Infinity;
+
+		for (let cell of gearCells) {
+			let boundCell = cell.element.getBoundingClientRect(),
+				currDistance = distance(
+					boundCenter.x,
+					boundCenter.y,
+					boundCell.x,
+					boundCell.y
+				);
+
+			if (currDistance < shortDistance && currDistance < 30) {
+				shortDistance = currDistance;
+				nearCell = cell;
+			}
+		}
+
+		return nearCell;
+	};
+
 	displayGearPieces();
 	document.addEventListener('mousedown', handleMouseDown);
 	document.addEventListener('mousemove', handleMouseMove);
@@ -131,8 +241,10 @@ const makeCell = (() => {
 		insert(gear) {
 			this.gear = gear;
 			gear.cell = this;
+			this.element.appendChild(gear.element);
 		},
 		remove() {
+			this.element.removeChild(this.gear.element);
 			this.gear.cell = null;
 			this.gear = null;
 		}
@@ -165,6 +277,11 @@ const makeGearsContainer = (() => {
 		rotation: 0,
 		prefix: null,
 		moving: false,
+		elmentCenter: null,
+		offset: {
+			x: 150,
+			y: 150
+		},
 		add(gear) {
 			let row = gear.relPos.row,
 				col = gear.relPos.col;
@@ -194,37 +311,38 @@ const makeGearsContainer = (() => {
 			let tempGears = [],
 				steps = this.rotation / 90;
 
-			for (let r = 0; r < 3; r++) {
-				for (let c = 0; c < 3; c++) {
-					if (this.gears[r][c]) {
-						tempGears.push(this.gears[r][c]);
-						this.gears[r][c] = null;
-					}
-				}
-			}
+			this.each((g, row, col) => {
+				tempGears.push(g);
+				this.gears[row][col] = null;
+			});
 
-			for (let g of tempGears) {
-				let row = g.relPos.row,
-					col = g.relPos.col;
+			tempGears.forEach(g => {
+				let [row, col] = this.gearPosition(g, steps);
 
-				for (let i = 0; i < steps; i++) {
-					let [pRow, pCol] = cellsPointer[row][col].split(':');
-
-					row = parseInt(pRow);
-					col = parseInt(pCol);
-				}
-				if (this.inverted) col = 2 - col;
 				this.gears[row][col] = g;
-			}
+			});
 
 			this.renderGears();
 		},
-		renderGears() {
-			for (let g of iteratorMultiArray(this.gears)) {
-				if (g) {
-					g.element.remove();
-				}
+		getPositionByGear(gear) {
+			return this.gearPosition(gear, this.rotate / 90);
+		},
+		gearPosition(gear, steps) {
+			let row = gear.relPos.row,
+				col = gear.relPos.col;
+				
+			for (let i = 0; i < steps; i++) {
+				let [pRow, pCol] = cellsPointer[row][col].split(':');
+
+				row = parseInt(pRow);
+				col = parseInt(pCol);
 			}
+			if (this.inverted) col = 2 - col;
+			return [row, col];
+		},
+		renderGears() {
+			for (let g of iteratorMultiArray(this.gears))
+				if (g) g.element.remove();
 
 			for (let r = 0; r < 3; r++) {
 				for (let c = 0; c < 3; c++) {
@@ -244,26 +362,50 @@ const makeGearsContainer = (() => {
 
 			return parent !== null;
 		},
+		clear() {
+			this.each((gear) => {
+				gear.element.remove();
+			});
+			this.element.remove();
+		},
+		each(cb) {
+			for (let r = 0; r < 3; r++)
+				for (let c = 0; c < 3; c++)
+					if (this.gears[r][c])
+						cb(this.gears[r][c], r, c);
+		},
+		*eachGenerator() {
+			for (let r = 0; r < 3; r++)
+				for (let c = 0; c < 3; c++)
+					if (this.gears[r][c])
+						yield [this.gears[r][c], r, c];
+		},
+		restore(e, offsetX, offsetY) {
+			this.each(g => g.cell.remove());
+			this.renderGears();
+			this.offset.x = offsetX;
+			this.offset.y = offsetY;
+			this.moving = true;
+			this.move(e.clientX, e.clientY);
+		},
 		ignoreMouseDown(e) {
 			return e.target.matches('.btn') ||
 				e.target.matches('.btn *'); 
 		},
 		onMouseDown(e) {
-			let x = e.clientX - 150,
-				y = e.clientY - 150;
-
 			this.moving = true;
 			this.element.classList.add('selected');
+			this.offset.x = 150;
+			this.offset.y = 150;
 			gsap.set(this.element, {
 				position: 'fixed',
 				cursor: 'grabbing',
 				width: 300,
 				height: 300,
 				top: 0,
-				left: 0,
-				x,
-				y
+				left: 0
 			});
+			this.move(e.clientX, e.clientY);
 		},
 		release() {
 			this.moving = false;
@@ -279,11 +421,8 @@ const makeGearsContainer = (() => {
 		},
 		onMove(e) {
 			if (!this.moving) return;
-			
-			let x = e.clientX - 150,
-				y = e.clientY - 150;
 
-			gsap.set(this.element, { x, y });
+			this.move(e.clientX, e.clientY);
 		},
 		onClick(e) {
 			if (
@@ -305,26 +444,40 @@ const makeGearsContainer = (() => {
 		},
 		onMouseUp() {
 			this.moving = false;
+		},
+		move(x, y) {
+			gsap.set(this.element, { 
+				x: x - this.offset.x,
+				y: y - this.offset.y
+			});
 		}
 	};
 
 	return () => {
 		let container = Object.create(proto),
-			id = generateUniqueId();
+			id = generateUniqueId(),
+			element = createGearContainerElement(id, (row, col) => {
+				return  `${id}-cc-${row}${col}`;
+			});
 
 		return Object.assign(container, {
-			element: createGearContainerElement(id),
+			element,
+			elementCenter: element.querySelector(`#${id}-cc-11`),
 			id,
 			gears: [
 				[null, null, null],
 				[null, null, null],
 				[null, null, null]
 			],
+			offset: {
+				x: 150,
+				y: 150
+			}
 		});
 	};
 })();
 
-const createGearContainerElement = (id) => {
+const createGearContainerElement = (id, generateChildId) => {
 	let $div = document.createElement('div'),
 		containerCells = [];
 
@@ -332,7 +485,7 @@ const createGearContainerElement = (id) => {
 		for(let c = 0; c < 3; c++)
 			containerCells.push(
 				`<div
-					id="${id}-cc-${r}${c}"
+					id="${generateChildId(r, c)}"
 					class="gear-cell p-1 border"
 				></div>`
 			);
@@ -406,8 +559,9 @@ const makeGear = (() => {
 
 const createGearElement = () => {
 	let $div = document.createElement('div');
-	$div.textContent = 'E';
 
+	$div.textContent = 'E';
+	$div.classList.add('gear');
 	return $div;
 };
 
@@ -436,8 +590,9 @@ const makeNut = (() => {
 
 const createNutElement = () => {
 	let $div = document.createElement('div');
-	$div.textContent = 'N';
 
+	$div.textContent = 'N';
+	$div.classList.add('gear');
 	return $div;
 };
 
