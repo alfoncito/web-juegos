@@ -6,14 +6,21 @@ scripts: ['../js/iq-gears.js']
 ---
 
 <section>
-	<section class="gear-board mx-auto">
-		{% for i in range(0, 25) %}
-			<div
-				id="gear-cell-{{i}}"
-				class="cell js-gear-cell"
-			>
-			</div>
-		{% endfor %}
+	<section class="position-relative">
+		<div class="gear-board mx-auto">
+			{% for i in range(0, 25) %}
+				<div
+					id="gear-cell-{{i}}"
+					class="cell js-gear-cell"
+				></div>
+			{% endfor %}
+		</div>
+		<div id="gear-cell-begin" class="cell-begin">
+			<button type="button">Iniciar</button>
+		</div>
+		<div id="gear-cell-end" class="cell-end">
+			<p>Finalizar</p>
+		</div>
 	</section>
 	<section>
 		<div

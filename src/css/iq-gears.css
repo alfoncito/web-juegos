@@ -26,6 +26,7 @@ html {
 	display: flex;
 	justify-content: center;
 	align-items: center;
+	font-size: 2rem;
 }
 
 .gear-board > .cell::before {
@@ -69,4 +70,21 @@ html {
 
 .gear-cell {
 	cursor: inherit;
+}
+
+.cell-begin,
+.cell-end {
+	position: absolute;
+	padding: 1rem;
+	background-color: hsl(250, 73%, 70%);
+}
+
+.cell-begin {
+	right: 0;
+	bottom: 0;
+}
+
+.cell-end {
+	left: 0;
+	bottom: 0;
 }

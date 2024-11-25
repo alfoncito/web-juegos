@@ -26,7 +26,13 @@ const CELL_CHECK_PATH = {
 const startGame = () => {
 	let gearCells = createGearCells(),
 		gearPieces = createPiecesBoard(),
-		currentGearPiece = null;
+		currentGearPiece = null,
+		beginCell = makeBeginCell(
+			{ elmId: 'gear-cell-begin', cells: gearCells }
+		),
+		endCell = makeEndCell(
+			{ elmId: 'gear-cell-end', cells: gearCells }
+		);
 
 	const handleMouseDown = (e) => {
 		if (
@@ -224,19 +230,27 @@ const makeCell = (() => {
 		},
 		gear: null,
 		element: null,
-		lastTranferenceCell: null,
+		trail: '',
 		get isEmpty() {
 			return this.gear === null;
 		},
-		transfer(cell, ...args) {
-			this.lastTranferenceCell = cell; 
-			if (this.gear)
-				this.gear.handle(...args);
-		},
 		transference(...args) {
-			for (let sbDir of Object.Keys(this.sibligns))
-				if (this.siblings[sbDir] !== this.lastTranferenceCell)
-					this.siblings[sbDir]?.transfer(this, ...args);
+			this.transferenceWithTrail(this.trail, ...args);
+		},
+		transfer(trail, ...args) {
+			// console.log('Actualizando');
+			// debugger;
+			if (this.trail !== trail && this.gear) {
+				// debugger;
+				// console.log('Actualizando');
+				this.trail = trail;
+				this.gear.handle(...args);
+			}
+		},
+		transferenceWithTrail(trail, ...args) {
+			// console.log('actualizando');
+			for (let sbDir of Object.keys(this.siblings))
+				this.siblings[sbDir].transfer(trail, ...args);
 		},
 		insert(gear) {
 			this.gear = gear;
@@ -260,6 +274,77 @@ const makeCell = (() => {
 		});
 	};
 })();
+
+const makeBeginCell = ({ elmId, cells }) => {
+	let beginCell = Object.create(
+			makeCell({ id: 'begin', elmId })
+		),
+		btn = beginCell.element.querySelector('button');
+
+	Object.assign(beginCell, {
+		tween: null,
+		value: 0,
+		handleClick() {
+			if (this.tween.paused())
+				this.tween.play();
+			else
+				this.tween.pause();
+		},
+		connect() {
+			let cell = cells.find(c => c.id === 14);
+
+			cell.siblings.right = this;
+			this.siblings.left = cell;
+		},
+		animate() {
+			this.tween = gsap.to(this, {
+				value: 360,
+				repeat: -1,
+				duration: 5,
+				callbackScope: this,
+				onUpdate: this.handleUpdate,
+				ease: 'none',
+				paused: true
+			});
+		},
+		handleUpdate() {
+			let trail = Symbol('trail');
+
+			// console.log('Actualizando');
+			this.transferenceWithTrail(trail, this.value);
+		}
+	});
+
+	btn.addEventListener(
+		'click',
+		beginCell.handleClick.bind(beginCell)
+	);
+	beginCell.animate();
+	beginCell.connect();
+
+	return beginCell;
+};
+
+const makeEndCell = ({ cells,  elmId }) => {
+	let endCell = Object.create(makeCell(
+		{ id: 'end', elmId }
+	));
+
+	Object.assign(endCell, {
+		connect() {
+			let cell = cells.find(c => c.id === 10);
+
+			cell.siblings.left = this;
+			this.siblings.right = cell;
+		},
+		transfer(msg) {
+			console.log('Exito');
+		}
+	});
+	
+	endCell.connect();
+	return endCell;
+};
 
 const makeGearsContainer = (() => {
 	const CENTER = { x: 1, y: 1 }, 
@@ -539,8 +624,9 @@ const makeGear = (() => {
 			row: null,
 			col: null
 		},		
-		handle() {
-		
+		handle(value) {
+			gsap.set(this.element, { rotation: value });
+			this.cell.transference(value * -1);
 		},
 	};
 
@@ -571,7 +657,7 @@ const makeNut = (() => {
 		element: null,
 		container: null,
 		handle() {
-
+			
 		},
 	};
 
@@ -599,12 +685,11 @@ const createNutElement = () => {
 const createGearCells = () => {
 	let cells = [];
 
-	for (let i = 0; i < 25; i++) {
+	for (let i = 0; i < 25; i++)
 		cells.push(makeCell({
 			id: i,
 			elmId: `gear-cell-${i}`
 		}));
-	}
 
 	return connectCells(cells);
 };
