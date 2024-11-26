@@ -24,117 +24,155 @@ const CELL_CHECK_PATH = {
 };
 
 const startGame = () => {
-	let gearCells = createGearCells(),
-		gearPieces = createPiecesBoard(),
-		currentGearPiece = null,
-		beginCell = makeBeginCell(
-			{ elmId: 'gear-cell-begin', cells: gearCells }
-		),
-		endCell = makeEndCell(
-			{ elmId: 'gear-cell-end', cells: gearCells }
-		);
+	let game = {
+		gearBoard: makeGameBoard(),
+		gearsPieces: createPiecesBoard(),
+		currPiece: null,
+		beginCell:  makeBeginCell('gear-cell-begin'),
+		endCell: makeEndCell('gear-cell-end'),
+		_states: {},
+		_currState: '',
+		addState(name, state) {
+			this._states[name] = state;
+		},
+		changeState(name) {
+			if (!this._states.hasOwnProperty(name))
+				throw new Error(`El estado '${name}' no existe`);
+				
+			this._states[this._currState]?.destroy();
+			this._currState = name;
+			this._states[this._currState].init();
+		}
+	};
+
+	const displayGearPieces = () => {
+		document.querySelectorAll('.js-gears-piece-target')
+			.forEach((gp, index) => {
+				gp.appendChild(
+					game.gearsPieces[index].element
+				);
+			});
+	};
+
+	game.gearBoard.connectCell(
+		game.beginCell,
+		14,
+		'left',
+		'right'
+	);
+	game.gearBoard.connectCell(
+		game.endCell,
+		10,
+		'right',
+		'left'
+	);
+	displayGearPieces();
+	game.addState('play', playState(game));
+	game.changeState('play');
+};
+
+const playState = (game) => {
+	const init = () => {
+		document.addEventListener('mousedown', handleMouseDown);
+		document.addEventListener('mousemove', handleMouseMove);
+		document.addEventListener('mouseup', handleMouseUp);
+		document.addEventListener('click', handleClick);	
+	};
+
+	const destroy = () => {
+		document.removeEventListener('mousedown', handleMouseDown);
+		document.removeEventListener('mousemove', handleMouseMove);
+		document.removeEventListener('mouseup', handleMouseUp);
+		document.removeEventListener('click', handleClick);
+	};
 
 	const handleMouseDown = (e) => {
 		if (
 			e.target.matches('.cell:has(.gear)') ||
 			e.target.matches('.cell .gear')
-		) {
+		)
 			takeAwayPiece(e);
-			return;
-		}
+		else
+			takePiece(e);
+	};
+
+	const handleMouseMove = (e) => {
+		game.currPiece?.onMove(e);
+	};
+
+	const handleMouseUp = (e) => {
+		if (!game.currPiece) return;
 		
-		for (let gp of gearPieces) {
+		game.currPiece.onMouseUp(e);
+		if (isInGearsPiecesZone(e))
+			restoreGearPiece();
+		else if (canInsertPiece())
+			insertPiece();
+	};
+
+	const handleClick = (e) => {
+		if (!game.currPiece) return;
+		if (game.currPiece.isChild(e.target))
+			game.currPiece.onClick(e);
+		else
+			restoreGearPiece();
+	};
+
+	const takePiece = (e) => {
+		for (let gp of game.gearsPieces) {
 			if (!gp.isChild(e.target)) continue;
 			if (gp.ignoreMouseDown(e)) break;
 
-			if (currentGearPiece)
-				restoreGearPieces();
+			if (game.currPiece)
+				restoreGearPiece();
 
-			currentGearPiece = gp;
-			currentGearPiece.element.remove();
+			game.currPiece = gp;
+			game.currPiece.element.remove();
 			document.body.appendChild(
-				currentGearPiece.element
+				game.currPiece.element
 			);
 
-			currentGearPiece.onMouseDown(e);
+			game.currPiece.onMouseDown(e);
 			break;
 		}
 	};
 
-	const handleMouseMove = (e) => {
-		currentGearPiece?.onMove(e);
-	}
-
-	const handleMouseUp = (e) => {
-		if (!currentGearPiece) return;
-		
-		currentGearPiece.onMouseUp(e);
-		if (isInGearsPiecesZone(e))
-			restoreGearPieces();
-		else if (canInsertPieces())
-			insertPieces();
-	}
-
-	const handleClick = (e) => {
-		if (!currentGearPiece) return;
-		if (currentGearPiece.isChild(e.target))
-			currentGearPiece.onClick(e);
-		else
-			restoreGearPieces();
-	};
-
 	const takeAwayPiece = (e) => {
 		let cellElement = e.target.closest('.cell'),
-			cell = findCellByElement(cellElement),
-			gearsContainer = cell.gear.container,
-			[row, col] = gearsContainer.getPositionByGear(cell.gear),
+			cell = game.gearBoard.findCellByElement(cellElement),
+			piece = game.gearBoard
+				.removePieceByCell(cell),
+			[row, col] = piece.getPositionByGear(cell.gear),
 			cellBound = cellElement.getBoundingClientRect();
 
-		gearsContainer.restore(
+		piece.restore(
 			e,
 			Math.abs(e.clientX - cellBound.x) + col * 100,
 			Math.abs(e.clientY - cellBound.y) + row * 100
 		);
-		currentGearPiece = gearsContainer;
+		game.currPiece = piece;
 		document.body.appendChild(
-			currentGearPiece.element
+			game.currPiece.element
 		);
 	};
 
-	const findCellByElement = (element) => {
-		for (let cell of gearCells)
-			if (cell.element === element)
-				return cell;
-
-		return null;
-	};
-
-	const restoreGearPieces = () => {
+	const restoreGearPiece = () => {
 		// Temporalmente a el primer espacio vacio
 		let targets = document.querySelectorAll(
 			'.js-gears-piece-target'
 		);
 		
-		currentGearPiece.element.remove();
-		currentGearPiece.release();
+		game.currPiece.element.remove();
+		game.currPiece.release();
 		for (let $target of targets) {
 			if (!$target.hasChildNodes()) {
 				$target.appendChild(
-					currentGearPiece.element
+					game.currPiece.element
 				);
 				break;
 			}
 		}
-		currentGearPiece = null;
-	};
-	
-	const displayGearPieces = () => {
-		document.querySelectorAll('.js-gears-piece-target')
-			.forEach((gp, index) => {
-				gp.appendChild(
-					gearPieces[index].element
-				);
-			});
+		game.currPiece = null;
 	};
 
 	const isInGearsPiecesZone = (e) => {
@@ -150,73 +188,113 @@ const startGame = () => {
 		);
 	};
 
-	const insertPieces = () => {
-		let mainCell = getNearCell();
+	const insertPiece = () => {
+		let refCell = game.gearBoard.getNearCellByElement(
+			game.currPiece.elementCenter
+		);
 
-		currentGearPiece.clear();
-		currentGearPiece.each((gear, row, col) => {
-			let pathAtt = `${row}:${col}`,
-				path = CELL_CHECK_PATH[pathAtt],
-				cell = mainCell;
-
-			path.forEach((p) => {
-				cell = cell.siblings[p];
-			});
-			cell.insert(gear);
+		game.gearBoard.insertPiece(
+			refCell,
+			game.currPiece
+		);
+		game.gearsPieces = game.gearsPieces.filter(gp => {
+			return gp !== game.currPiece
 		});
-		currentGearPiece = null;
+		game.currPiece = null;
 	};
 
-	const canInsertPieces = () => {
-		let mainCell = getNearCell(),
-			gears;
-
-		if (!mainCell) return false;
-
-		gears = currentGearPiece.eachGenerator();
-		for (let [gear, row, col] of gears) {
-			let pathAtt = `${row}:${col}`,
-				path = CELL_CHECK_PATH[pathAtt],
-				cell = mainCell;
-
-				for (let p of path)
-					cell = cell?.siblings[p];
-
-				if (!cell || !cell.isEmpty)
-					return false;
-		}
-		return true;
+	const canInsertPiece = () => {
+		let refCell = game.gearBoard.getNearCellByElement(
+			game.currPiece.elementCenter
+		);
+		
+		return game.gearBoard.canInsertPiece(
+			refCell,
+			game.currPiece
+		);
 	};
+	
+	return { init, destroy };
+};
 
-	const getNearCell = () => {
-		let boundCenter = currentGearPiece
-				.elementCenter.getBoundingClientRect(),
-			nearCell = null,
-			shortDistance = Infinity;
+const makeGameBoard = () => {
+	return {
+		_cells: createGearCells(),
+		_pieces: [],
+		connectCell(cell, cellId, sibFrom, sibDest) {
+			let innerCell = this._cells.find(c => c.id === cellId);
 
-		for (let cell of gearCells) {
-			let boundCell = cell.element.getBoundingClientRect(),
-				currDistance = distance(
-					boundCenter.x,
-					boundCenter.y,
-					boundCell.x,
-					boundCell.y
-				);
+			if (!innerCell)
+				throw new Error(`Id '${cellId}' de celda invalido.`);
 
-			if (currDistance < shortDistance && currDistance < 30) {
-				shortDistance = currDistance;
-				nearCell = cell;
+			cell.siblings[sibFrom] = innerCell;
+			innerCell.siblings[sibDest] = cell;
+		},
+		findCellByElement(element) {
+			for (let cell of this._cells)
+				if (cell.element === element)
+					return cell;
+
+			return null;
+		},
+		canInsertPiece(refCell, piece) {
+			if (!refCell) return false;
+
+			for (let [gear, row, col] of piece.eachGenerator()) {
+				let pathAtt = `${row}:${col}`,
+					path = CELL_CHECK_PATH[pathAtt],
+					cell = refCell;
+
+					for (let p of path)
+						cell = cell?.siblings[p];
+
+					if (!cell || !cell.isEmpty)
+						return false;
 			}
+			return true;
+		},
+		insertPiece(refCell, piece) {
+			piece.clear();
+			piece.each((gear, row, col) => {
+				let pathAtt = `${row}:${col}`,
+					path = CELL_CHECK_PATH[pathAtt],
+					cell = refCell;
+
+				for(let p of path)
+					cell = cell.siblings[p];
+				cell.insert(gear);
+			});
+			this._pieces.push(piece);
+		},
+		removePieceByCell(cell) {
+			let piece = cell.gear.container;
+
+			this._pieces = this._pieces.filter(p => p !== piece);
+			return piece;
+		},
+		getNearCellByElement(element) {
+			let boundCenter = element.getBoundingClientRect(),
+				shortDistance = Infinity,
+				nearCell;
+
+			for (let cell of this._cells) {
+				let boundCell = cell.element.getBoundingClientRect(),
+					currDistance = distance(
+						boundCenter.x,
+						boundCenter.y,
+						boundCell.x,
+						boundCell.y
+					);
+
+				if (currDistance < shortDistance && currDistance < 30) {
+					shortDistance = currDistance;
+					nearCell = cell;
+				}
+			}
+
+			return nearCell;
 		}
-
-		return nearCell;
 	};
-
-	displayGearPieces();
-	document.addEventListener('mousedown', handleMouseDown);
-	document.addEventListener('mousemove', handleMouseMove);
-	document.addEventListener('mouseup', handleMouseUp);
-	document.addEventListener('click', handleClick);
 };
 
 const makeCell = (() => {
@@ -238,17 +316,12 @@ const makeCell = (() => {
 			this.transferenceWithTrail(this.trail, ...args);
 		},
 		transfer(trail, ...args) {
-			// console.log('Actualizando');
-			// debugger;
 			if (this.trail !== trail && this.gear) {
-				// debugger;
-				// console.log('Actualizando');
 				this.trail = trail;
 				this.gear.handle(...args);
 			}
 		},
 		transferenceWithTrail(trail, ...args) {
-			// console.log('actualizando');
 			for (let sbDir of Object.keys(this.siblings))
 				this.siblings[sbDir].transfer(trail, ...args);
 		},
@@ -275,7 +348,7 @@ const makeCell = (() => {
 	};
 })();
 
-const makeBeginCell = ({ elmId, cells }) => {
+const makeBeginCell = (elmId) => {
 	let beginCell = Object.create(
 			makeCell({ id: 'begin', elmId })
 		),
@@ -289,12 +362,6 @@ const makeBeginCell = ({ elmId, cells }) => {
 				this.tween.play();
 			else
 				this.tween.pause();
-		},
-		connect() {
-			let cell = cells.find(c => c.id === 14);
-
-			cell.siblings.right = this;
-			this.siblings.left = cell;
 		},
 		animate() {
 			this.tween = gsap.to(this, {
@@ -310,7 +377,6 @@ const makeBeginCell = ({ elmId, cells }) => {
 		handleUpdate() {
 			let trail = Symbol('trail');
 
-			// console.log('Actualizando');
 			this.transferenceWithTrail(trail, this.value);
 		}
 	});
@@ -320,29 +386,21 @@ const makeBeginCell = ({ elmId, cells }) => {
 		beginCell.handleClick.bind(beginCell)
 	);
 	beginCell.animate();
-	beginCell.connect();
 
 	return beginCell;
 };
 
-const makeEndCell = ({ cells,  elmId }) => {
+const makeEndCell = (elmId) => {
 	let endCell = Object.create(makeCell(
 		{ id: 'end', elmId }
 	));
 
 	Object.assign(endCell, {
-		connect() {
-			let cell = cells.find(c => c.id === 10);
-
-			cell.siblings.left = this;
-			this.siblings.right = cell;
-		},
 		transfer(msg) {
 			console.log('Exito');
 		}
 	});
 	
-	endCell.connect();
 	return endCell;
 };
 
@@ -483,7 +541,7 @@ const makeGearsContainer = (() => {
 			this.offset.x = 150;
 			this.offset.y = 150;
 			gsap.set(this.element, {
-				position: 'fixed',
+				position: 'absolute',
 				cursor: 'grabbing',
 				width: 300,
 				height: 300,
