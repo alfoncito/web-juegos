@@ -10,6 +10,7 @@ import {
 	distance
 } from '../js/utils.js';
 import { gsap } from 'gsap';
+import levels from './iq-levels.js';
 
 const CELL_CHECK_PATH = {
 	['0:0']: ['up', 'left'],
@@ -45,30 +46,23 @@ const startGame = () => {
 		}
 	};
 
-	const displayGearPieces = () => {
-		document.querySelectorAll('.js-gears-piece-target')
-			.forEach((gp, index) => {
-				gp.appendChild(
-					game.gearsPieces[index].element
-				);
-			});
-	};
-
 	game.gearBoard.connectCell(
 		game.beginCell,
-		14,
+		9,
 		'left',
 		'right'
 	);
 	game.gearBoard.connectCell(
 		game.endCell,
-		10,
-		'right',
-		'left'
+		21,
+		'up',
+		'down'
 	);
-	displayGearPieces();
+	
 	game.addState('play', playState(game));
-	game.changeState('play');
+	game.addState('try', tryState(game));
+	game.addState('nextLevel', nextLevelState(game));
+	game.changeState('nextLevel');
 };
 
 const playState = (game) => {
@@ -76,7 +70,9 @@ const playState = (game) => {
 		document.addEventListener('mousedown', handleMouseDown);
 		document.addEventListener('mousemove', handleMouseMove);
 		document.addEventListener('mouseup', handleMouseUp);
-		document.addEventListener('click', handleClick);	
+		document.addEventListener('click', handleClick);
+
+		game.beginCell.onPlay = onPlay;
 	};
 
 	const destroy = () => {
@@ -84,16 +80,37 @@ const playState = (game) => {
 		document.removeEventListener('mousemove', handleMouseMove);
 		document.removeEventListener('mouseup', handleMouseUp);
 		document.removeEventListener('click', handleClick);
+
+		game.beginCell.onPlay = null;
+	};
+
+	const onPlay = (cancel) => {
+		if (!game.gearBoard.isFull()) {
+			cancel()
+			console.log('Faltan piezas');
+		} else
+			game.changeState('try');
 	};
 
 	const handleMouseDown = (e) => {
 		if (
 			e.target.matches('.cell:has(.gear)') ||
 			e.target.matches('.cell .gear')
-		)
-			takeAwayPiece(e);
-		else
+		) {
+			let cellElement = e.target.closest('.cell'),
+				cell = game.gearBoard.findCellByElement(cellElement),
+				piece = cell.gear.container;
+
+			if (!game.gearBoard.isFixed(piece))
+				takeAwayPiece({
+					piece,
+					cellTaked: cell,
+					x: e.clientX,
+					y: e.clientY
+				});
+		} else {
 			takePiece(e);
+		}
 	};
 
 	const handleMouseMove = (e) => {
@@ -137,19 +154,17 @@ const playState = (game) => {
 		}
 	};
 
-	const takeAwayPiece = (e) => {
-		let cellElement = e.target.closest('.cell'),
-			cell = game.gearBoard.findCellByElement(cellElement),
-			piece = game.gearBoard
-				.removePieceByCell(cell),
-			[row, col] = piece.getPositionByGear(cell.gear),
-			cellBound = cellElement.getBoundingClientRect();
+	const takeAwayPiece = ({ x, y, piece, cellTaked }) => {
+		let [row, col] = piece.getPositionByGear(cellTaked.gear),
+			cellBound = cellTaked.element.getBoundingClientRect();
 
-		piece.restore(
-			e,
-			Math.abs(e.clientX - cellBound.x) + col * 100,
-			Math.abs(e.clientY - cellBound.y) + row * 100
-		);
+		game.gearBoard.removePiece(piece);
+		piece.restore({
+			x,
+			y,
+			offsetX: (x - cellBound.x) + col * 100,
+			offsetY: (y - cellBound.y) + row * 100
+		});
 		game.currPiece = piece;
 		document.body.appendChild(
 			game.currPiece.element
@@ -197,9 +212,6 @@ const playState = (game) => {
 			refCell,
 			game.currPiece
 		);
-		game.gearsPieces = game.gearsPieces.filter(gp => {
-			return gp !== game.currPiece
-		});
 		game.currPiece = null;
 	};
 
@@ -217,10 +229,100 @@ const playState = (game) => {
 	return { init, destroy };
 };
 
+const tryState = (game) => {
+	let win = false;
+	
+	const init = () => {
+		console.log('Iniciando prueba');
+		game.beginCell.onPause = onPause;
+		game.endCell.onWin = onWin;
+	};
+
+	const destroy = () => {
+		game.beginCell.onPause = null;
+		game.endCell.onWin = onWin;
+		win = false;
+	};
+
+	const onPause = (cancel) => {
+		console.log('Vamos de regreso');
+		if (!win)
+			game.changeState('play');
+		else
+			cancel();
+	};
+
+	const onWin = () => {
+		console.log('Bien hecho');
+		win = true;
+		setTimeout(() => {
+			game.beginCell.pause();
+			game.endCell.reset();
+			game.changeState('nextLevel');
+		}, 3000);
+	};
+
+	return { init, destroy };
+};
+
+const nextLevelState = (game) => {
+	let level = -1;
+	
+	const init = () => {
+		game.currPiece = null;
+		game.beginCell.disable = true;
+		game.gearBoard.clear();
+		level++;
+		
+		fixPieces();
+		displayGearPieces();
+
+		game.changeState('play');
+	};
+
+	const destroy = () => {
+		game.beginCell.disable = false;
+	};
+
+	const fixPieces = () => {
+		let levelPositions = levels[level];
+
+		levelPositions.forEach(lp => {
+			let [pieceId, position, rotate, inverted] = lp.split('|'),
+				piece = game.gearsPieces.find(p => p.id === pieceId);
+
+			if (!piece)
+				throw new Error(`Id de pieza ${pieceId} no encontrado`);
+
+			piece.set({
+				rotation: parseInt(rotate),
+				inverted: inverted === 'true'
+			});
+			game.gearBoard.fixPiece(piece, parseInt(position));
+		});
+	};
+
+	const displayGearPieces = () => {
+		let targets = document
+				.querySelectorAll('.js-gears-piece-target'),
+			i = 0;
+
+		for (let gp of game.gearsPieces) {
+			if (game.gearBoard.isFixed(gp)) continue;
+			
+			targets[i].appendChild(gp.element);
+			i++;
+		}
+	};
+
+	return { init, destroy };
+};
+
 const makeGameBoard = () => {
 	return {
 		_cells: createGearCells(),
 		_pieces: [],
+		_fixedPieces: [],
 		connectCell(cell, cellId, sibFrom, sibDest) {
 			let innerCell = this._cells.find(c => c.id === cellId);
 
@@ -248,7 +350,7 @@ const makeGameBoard = () => {
 					for (let p of path)
 						cell = cell?.siblings[p];
 
-					if (!cell || !cell.isEmpty)
+					if (!cell || !cell.isEmpty())
 						return false;
 			}
 			return true;
@@ -262,15 +364,17 @@ const makeGameBoard = () => {
 
 				for(let p of path)
 					cell = cell.siblings[p];
+				if (!cell || !cell.isEmpty())
+					throw new Error(`La posicion de la pieza '${piece.id}' es invalida`);
 				cell.insert(gear);
 			});
 			this._pieces.push(piece);
 		},
-		removePieceByCell(cell) {
-			let piece = cell.gear.container;
+		removePiece(piece) {
+			let index = this._pieces.findIndex(p => p === piece);
 
-			this._pieces = this._pieces.filter(p => p !== piece);
-			return piece;
+			if (index !== -1)
+				this._pieces.splice(index, 1);
 		},
 		getNearCellByElement(element) {
 			let boundCenter = element.getBoundingClientRect(),
@@ -293,6 +397,25 @@ const makeGameBoard = () => {
 			}
 
 			return nearCell;
+		},
+		clear() {
+			this._pieces.forEach(p => p.clear());
+			this._pieces.length = 0;
+			this._fixedPieces.length = 0;
+		},
+		fixPiece(piece, position) {
+			let cell = this._cells.find(p => p.id === position);
+
+			if (!cell)
+				throw new Error(`Posicion ${position} invalida.`);
+			this._fixedPieces.push(piece);
+			this.insertPiece(cell, piece);
+		},
+		isFixed(piece) {
+			return this._fixedPieces.includes(piece);
+		},
+		isFull() {				
+			return this._pieces.length === 7;
 		}
 	};
 };
@@ -309,7 +432,7 @@ const makeCell = (() => {
 		gear: null,
 		element: null,
 		trail: '',
-		get isEmpty() {
+		isEmpty() {
 			return this.gear === null;
 		},
 		transference(...args) {
@@ -357,11 +480,35 @@ const makeBeginCell = (elmId) => {
 	Object.assign(beginCell, {
 		tween: null,
 		value: 0,
+		onPlay: null,
+		onPause: null,
+		disable: false,
+		isEmpty() {
+			return false;
+		},
 		handleClick() {
-			if (this.tween.paused())
-				this.tween.play();
-			else
-				this.tween.pause();
+			let aborted = false;
+
+			if (this.disable) return;
+			
+			const cancel = () => {
+				aborted = true;
+			};
+			
+			if (this.tween.paused()) {
+				this.onPlay?.(cancel);
+				if (!aborted) this.tween.play(0);
+			} else {
+				this.onPause?.(cancel);
+				if (!aborted) {
+					this.tween.pause();
+					this.transferenceWithTrail(Symbol(), 0);
+				}
+			}
+		},
+		pause() {
+			console.log('Pausando');
+			this.tween.pause(0, false);
 		},
 		animate() {
 			this.tween = gsap.to(this, {
@@ -396,8 +543,19 @@ const makeEndCell = (elmId) => {
 	));
 
 	Object.assign(endCell, {
-		transfer(msg) {
-			console.log('Exito');
+		onWin: null,
+		count: 0,
+		limit: 30 * 3,
+		isEmpty() {
+			return false;
+		},
+		transfer() {
+			this.count++;
+			if (this.count === this.limit)
+				this.onWin?.();
+		},
+		reset() {
+			this.count = 0;
 		}
 	});
 	
@@ -433,6 +591,14 @@ const makeGearsContainer = (() => {
 			gear.container = this;
 			this.renderGears();
 		},
+		set({ rotation, inverted }) {
+			if (rotation !== null && rotation % 90 !== 0)
+				throw new Error(`La rotacion solo puede un numero multiplo de 90, ${rotation} dado.`);
+
+			this.rotation = rotation ?? this.rotation;
+			this.inverted = inverted ?? this.inverted;
+			this.resort();
+		},
 		turnLeft() {
 			this.addTurn(this.inverted ? 90 : -90);
 		},
@@ -445,10 +611,12 @@ const makeGearsContainer = (() => {
 				this.rotation += 360;
 			this.rotation %= 360;
 			this.resort();
+			this.renderGears()
 		},
 		invert() {
 			this.inverted = !this.inverted;
 			this.resort();
+			this.renderGears();
 		},
 		resort() {
 			let tempGears = [],
@@ -464,8 +632,6 @@ const makeGearsContainer = (() => {
 
 				this.gears[row][col] = g;
 			});
-
-			this.renderGears();
 		},
 		getPositionByGear(gear) {
 			return this.gearPosition(gear, this.rotate / 90);
@@ -507,8 +673,11 @@ const makeGearsContainer = (() => {
 		},
 		clear() {
 			this.each((gear) => {
-				gear.element.remove();
+				gear.cell?.remove();
 			});
+
+			this.release();
+			this.renderGears();
 			this.element.remove();
 		},
 		each(cb) {
@@ -523,13 +692,22 @@ const makeGearsContainer = (() => {
 					if (this.gears[r][c])
 						yield [this.gears[r][c], r, c];
 		},
-		restore(e, offsetX, offsetY) {
+		restore({ x, y, offsetX, offsetY }) {
 			this.each(g => g.cell.remove());
 			this.renderGears();
 			this.offset.x = offsetX;
 			this.offset.y = offsetY;
 			this.moving = true;
-			this.move(e.clientX, e.clientY);
+			this.element.classList.add('selected');
+			gsap.set(this.element, {
+				position: 'fixed',
+				cursor: 'grabbing',
+				width: 300,
+				height: 300,
+				top: 0,
+				left: 0
+			});
+			this.move(x, y);
 		},
 		ignoreMouseDown(e) {
 			return e.target.matches('.btn') ||
@@ -541,7 +719,7 @@ const makeGearsContainer = (() => {
 			this.offset.x = 150;
 			this.offset.y = 150;
 			gsap.set(this.element, {
-				position: 'absolute',
+				position: 'fixed',
 				cursor: 'grabbing',
 				width: 300,
 				height: 300,
@@ -596,9 +774,8 @@ const makeGearsContainer = (() => {
 		}
 	};
 
-	return () => {
+	return (id) => {
 		let container = Object.create(proto),
-			id = generateUniqueId(),
 			element = createGearContainerElement(id, (row, col) => {
 				return  `${id}-cc-${row}${col}`;
 			});
@@ -780,38 +957,42 @@ const createPiecesBoard = () => {
 		. -> nada
 	*/
 
+	const gearsId = [
+		'purple', 'pink', 'red', 'orange',
+		'blue', 'yellow', 'green'
+	];
 	const gearsMap = [
-		[
+		[ // purple 
 			['.', '.', '.'],
 			['n', 'g', '.'],
 			['.', 'n', '.']
 		],
-		[
+		[	// pink
 			['.', '.', '.'],
 			['g', 'n', '.'],
 			['.', 'g', '.']
 		],
-		[
+		[	// red
 			['.', '.', '.'],
 			['.', 'g', 'n'],
 			['g', 'n', '.']
 		],
-		[
-			['.', 'n', '.'],
-			['.', 'g', '.'],
-			['.', 'g', '.']
+		[	// orange
+			['.', '.', '.'],
+			['n', 'g', 'g'],
+			['.', '.', '.']
 		],
-		[
+		[	// blue
 			['.', 'g', '.'],
 			['n', 'n', 'n'],
 			['.', '.', '.']
 		],
-		[
+		[	// yellow
 			['.', 'n', '.'],
 			['g', 'g', 'g'],
 			['.', '.', '.']
 		],
-		[
+		[	// green
 			['.', '.', 'g'],
 			['g', 'g', 'n'],
 			['.', '.', '.']
@@ -820,8 +1001,8 @@ const createPiecesBoard = () => {
 
 	let pieces = [];
 
-	for (let gearChars of gearsMap) {
-		const gearFactory = makeGearFactory();
+	gearsMap.forEach((gearChars, i) => {
+		const gearFactory = makeGearFactory(gearsId[i]);
 
 		for (let r = 0; r < 3; r++) {
 			for (let c = 0; c < 3; c++) {
@@ -833,13 +1014,13 @@ const createPiecesBoard = () => {
 		}
 
 		pieces.push(gearFactory.build());
-	}
+	});
 	
 	return pieces;
 };
 
-const makeGearFactory = () => {
-	let container = makeGearsContainer();
+const makeGearFactory = (id) => {
+	let container = makeGearsContainer(id);
 
 	return {
 		add(gearCode, row, col) {
