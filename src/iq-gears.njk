@@ -5,31 +5,50 @@ permalink: '/iq-gears/'
 scripts: ['../js/iq-gears.js']
 ---
 
-<section>
-	<section class="position-relative">
-		<div class="gear-board mx-auto">
-			{% for i in range(0, 25) %}
-				<div
-					id="gear-cell-{{i}}"
-					class="cell js-gear-cell"
-				></div>
-			{% endfor %}
-		</div>
-		<div id="gear-cell-begin" class="cell-begin">
-			<button type="button">Iniciar</button>
-		</div>
-		<div id="gear-cell-end" class="cell-end">
-			<p>Finalizar</p>
+<section class="layout">
+	<section class="py-3">
+		<div class="gear-board mx-auto position-relative">
+			<div class="gear-board__inner">
+				{% for i in range(0, 25) %}
+					<div
+						id="gear-cell-{{i}}"
+						class="cell js-gear-cell {% if i === 9 or i === 21 %}cell-input{% endif %}"
+					></div>
+				{% endfor %}
+			</div>
+			<div id="gear-cell-begin" class="cell-begin">
+				<button type="button"></button>
+			</div>
+			<div id="gear-cell-end" class="cell-end">
+				<img
+					class="light-off"
+					src="/assets/img/iq-gears/bombillo-apagado.svg"
+					alt="Bombillo"
+				/>
+				<img
+					id="light-on"
+					class="light-on"
+					src="/assets/img/iq-gears/bombillo-encendido.svg"
+					alt="Bombillo"
+				/>
+			</div>
 		</div>
 	</section>
 	<section>
+		<div class="text-center py-lg-3">
+			<button
+				type="button"
+				id="btn-next-level"
+				class="btn-next-level"
+			></button>
+		</div>
 		<div
 			id="gears-pieces-container"
-			class="border d-flex flex-wrap justify-content-center p-3 my-3"
+			class="gears-pieces-container py-3"
 		>
 			{% for i in range(0, 7) %}
 				<div
-					class="js-gears-piece-target border m-1"
+					class="target js-gears-piece-target m-2"
 				></div>
 			{% endfor %}
 		</div>

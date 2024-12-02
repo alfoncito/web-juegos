@@ -94,8 +94,9 @@ const playState = (game) => {
 
 	const handleMouseDown = (e) => {
 		if (
-			e.target.matches('.cell:has(.gear)') ||
-			e.target.matches('.cell .gear')
+			e.target.matches('.cell:has(.js-gear)') ||
+			e.target.matches('.cell .js-gear') ||
+			e.target.matches('.cell .js-gear *')
 		) {
 			let cellElement = e.target.closest('.cell'),
 				cell = game.gearBoard.findCellByElement(cellElement),
@@ -149,44 +150,67 @@ const playState = (game) => {
 				game.currPiece.element
 			);
 
-			game.currPiece.onMouseDown(e);
+			game.currPiece.onMouseDown({
+				x: e.clientX,
+				y: e.clientY,
+				sideWidth: game.gearBoard.getCellWidth() * 3
+			});
 			break;
 		}
 	};
 
 	const takeAwayPiece = ({ x, y, piece, cellTaked }) => {
 		let [row, col] = piece.getPositionByGear(cellTaked.gear),
-			cellBound = cellTaked.element.getBoundingClientRect();
+			cellBound = cellTaked.element.getBoundingClientRect(),
+			cellWidth = game.gearBoard.getCellWidth();
+
+		if (game.currPiece)
+				restoreGearPiece();
 
 		game.gearBoard.removePiece(piece);
-		piece.restore({
-			x,
-			y,
-			offsetX: (x - cellBound.x) + col * 100,
-			offsetY: (y - cellBound.y) + row * 100
-		});
 		game.currPiece = piece;
 		document.body.appendChild(
 			game.currPiece.element
 		);
+		piece.restore({
+			x,
+			y,
+			sideWidth: cellWidth * 3
+		});
 	};
 
 	const restoreGearPiece = () => {
-		// Temporalmente a el primer espacio vacio
 		let targets = document.querySelectorAll(
-			'.js-gears-piece-target'
-		);
-		
+				'.js-gears-piece-target'
+			),
+			pieceBound = game.currPiece.element
+				.getBoundingClientRect(),
+			nearTarget,
+			targetDistance = Infinity;
+
 		game.currPiece.element.remove();
 		game.currPiece.release();
-		for (let $target of targets) {
-			if (!$target.hasChildNodes()) {
-				$target.appendChild(
-					game.currPiece.element
+		
+		for (let target of targets) {
+			if (target.hasChildNodes()) continue;
+
+			let targetBound = target.getBoundingClientRect(),
+				dist = distance(
+					pieceBound.x + pieceBound.width / 2,
+					pieceBound.y + pieceBound.height / 2,
+					targetBound.x + targetBound.width / 2,
+					targetBound.y + targetBound.height / 2
 				);
-				break;
+
+			if (dist < targetDistance) {
+				targetDistance = dist;
+				nearTarget = target;
 			}
 		}
+
+		nearTarget.appendChild(
+			game.currPiece.element
+		);
 		game.currPiece = null;
 	};
 
@@ -230,36 +254,67 @@ const playState = (game) => {
 };
 
 const tryState = (game) => {
-	let win = false;
+	let win = false,
+		btnNextLevel = document.getElementById('btn-next-level');
 	
 	const init = () => {
 		console.log('Iniciando prueba');
 		game.beginCell.onPause = onPause;
 		game.endCell.onWin = onWin;
+		btnNextLevel.addEventListener('click', handleClick);
 	};
 
 	const destroy = () => {
 		game.beginCell.onPause = null;
 		game.endCell.onWin = onWin;
 		win = false;
+		btnNextLevel.removeEventListener('click', handleClick);
 	};
 
 	const onPause = (cancel) => {
-		console.log('Vamos de regreso');
-		if (!win)
-			game.changeState('play');
-		else
+		if (!win) {
+			console.log('Aqui seguimos');
+			game.beginCell.reverse(() => {
+				console.log('Reversado');
+				game.changeState('play');
+			});
+		} else
 			cancel();
 	};
 
 	const onWin = () => {
 		console.log('Bien hecho');
-		win = true;
-		setTimeout(() => {
+		showButton(() => {
+			win = true;
+		});
+	};
+
+	const handleClick = () => {
+		if (!win) return;
+		
+		hideButton(() => {
 			game.beginCell.pause();
 			game.endCell.reset();
 			game.changeState('nextLevel');
-		}, 3000);
+		});
+	};
+
+	const showButton = (cb) => {
+		gsap.to(btnNextLevel, {
+			ease: 'back.out',
+			scale: 1,
+			duration: .5,
+			onComplete: cb
+		});
+	};
+
+	const hideButton = (cb) => {
+		gsap.to(btnNextLevel, {
+			scale: 0,
+			ease: 'back.in',
+			duration: .5,
+			onComplete: cb
+		});
 	};
 
 	return { init, destroy };
@@ -399,7 +454,10 @@ const makeGameBoard = () => {
 			return nearCell;
 		},
 		clear() {
-			this._pieces.forEach(p => p.clear());
+			this._pieces.forEach(p => {
+				p.enable();
+				p.clear();
+			});
 			this._pieces.length = 0;
 			this._fixedPieces.length = 0;
 		},
@@ -409,6 +467,7 @@ const makeGameBoard = () => {
 			if (!cell)
 				throw new Error(`Posicion ${position} invalida.`);
 			this._fixedPieces.push(piece);
+			piece.disable();
 			this.insertPiece(cell, piece);
 		},
 		isFixed(piece) {
@@ -416,6 +475,10 @@ const makeGameBoard = () => {
 		},
 		isFull() {				
 			return this._pieces.length === 7;
+		},
+		getCellWidth() {
+			return this._cells[0].element
+				.getBoundingClientRect().width;
 		}
 	};
 };
@@ -500,15 +563,29 @@ const makeBeginCell = (elmId) => {
 				if (!aborted) this.tween.play(0);
 			} else {
 				this.onPause?.(cancel);
-				if (!aborted) {
-					this.tween.pause();
-					this.transferenceWithTrail(Symbol(), 0);
-				}
+				if (!aborted) this.tween.pause();
 			}
 		},
 		pause() {
 			console.log('Pausando');
 			this.tween.pause(0, false);
+		},
+		reverse(cb) {
+			let fromValue = this.value % 72,
+				dur = fromValue / 72;
+
+			gsap.to(this, {
+					value: 0,
+					startAt: { value: fromValue },
+					duration: dur,
+					callbackScope: this,
+					onComplete: cb,
+					onUpdate: this.handleUpdate,
+					ease: 'none',
+					paused: true
+				})
+				.timeScale(2)
+				.play();
 		},
 		animate() {
 			this.tween = gsap.to(this, {
@@ -539,26 +616,37 @@ const makeBeginCell = (elmId) => {
 
 const makeEndCell = (elmId) => {
 	let endCell = Object.create(makeCell(
-		{ id: 'end', elmId }
-	));
+			{ id: 'end', elmId }
+		)),
+		lightOn = document.getElementById('light-on');
 
 	Object.assign(endCell, {
 		onWin: null,
-		count: 0,
-		limit: 30 * 3,
+		progress: 0,
+		tween: gsap.to(lightOn, {
+			ease: 'bounce.in',
+			repeat: 0,
+			duration: 3,
+			opacity: 1,
+			paused: true
+		}),
 		isEmpty() {
 			return false;
 		},
 		transfer() {
-			this.count++;
-			if (this.count === this.limit)
-				this.onWin?.();
+			if (this.progress >= 1) return;
+
+			this.progress += 0.01;
+			this.tween.progress(this.progress);
+			if (this.progress >= 1)
+				this.onWin?.(); 
 		},
 		reset() {
-			this.count = 0;
-		}
+			this.progress = 0;
+			this.tween.progress(0);
+		},
 	});
-	
+
 	return endCell;
 };
 
@@ -692,50 +780,50 @@ const makeGearsContainer = (() => {
 					if (this.gears[r][c])
 						yield [this.gears[r][c], r, c];
 		},
-		restore({ x, y, offsetX, offsetY }) {
+		restore({ x, y, sideWidth }) {
 			this.each(g => g.cell.remove());
 			this.renderGears();
-			this.offset.x = offsetX;
-			this.offset.y = offsetY;
 			this.moving = true;
 			this.element.classList.add('selected');
 			gsap.set(this.element, {
 				position: 'fixed',
 				cursor: 'grabbing',
-				width: 300,
-				height: 300,
+				width: sideWidth,
+				height: sideWidth,
 				top: 0,
 				left: 0
 			});
+			this.offsetMiddle();
 			this.move(x, y);
 		},
 		ignoreMouseDown(e) {
 			return e.target.matches('.btn') ||
 				e.target.matches('.btn *'); 
 		},
-		onMouseDown(e) {
+		onMouseDown({ x, y, sideWidth }) {
 			this.moving = true;
 			this.element.classList.add('selected');
-			this.offset.x = 150;
-			this.offset.y = 150;
+			this.element.classList.remove('show-control');
 			gsap.set(this.element, {
 				position: 'fixed',
 				cursor: 'grabbing',
-				width: 300,
-				height: 300,
+				width: sideWidth,
+				height: sideWidth,
 				top: 0,
 				left: 0
 			});
-			this.move(e.clientX, e.clientY);
+			this.offsetMiddle();
+			this.move(x, y);
 		},
 		release() {
 			this.moving = false;
 			this.element.classList.remove('selected');
+			this.element.classList.remove('show-control');
 			gsap.set(this.element, {
 				position: 'relative',
 				cursor: 'grab',
-				width: 'auto',
-				height: 'auto',
+				width: '100%',
+				height: '100%',
 				x: 0,
 				y: 0
 			});	
@@ -747,29 +835,47 @@ const makeGearsContainer = (() => {
 		},
 		onClick(e) {
 			if (
-				e.target.matches('.btn-turn-left') ||
-				e.target.matches('.btn-turn-left *')
+				e.target.matches('#btn-turn-left') ||
+				e.target.matches('#btn-turn-left *')
 			)
 				this.turnLeft();
 			else if (
-				e.target.matches('.btn-turn-right') ||
-				e.target.matches('.btn-turn-right *')
+				e.target.matches('#btn-turn-right') ||
+				e.target.matches('#btn-turn-right *')
 			)
 				this.turnRight();
 			else if (
-				e.target.matches('.btn-invert') ||
-				e.target.matches('.btn-invert *')
+				e.target.matches('#btn-invert') ||
+				e.target.matches('#btn-invert *')
 			)
 				this.invert();
 				
 		},
 		onMouseUp() {
 			this.moving = false;
+			this.element.classList.add('show-control');
 		},
 		move(x, y) {
 			gsap.set(this.element, { 
 				x: x - this.offset.x,
 				y: y - this.offset.y
+			});
+		},
+		offsetMiddle() {
+			let width = this.element.getBoundingClientRect().width,
+				middle = width / 2;
+
+			this.offset.x = middle;
+			this.offset.y = middle;
+		},
+		disable() {
+			this.each(gear => {
+				gear.element.classList.add('disable');
+			});
+		},
+		enable() { 
+			this.each(gear => {
+				gear.element.classList.remove('disable');
 			});
 		}
 	};
@@ -789,10 +895,7 @@ const makeGearsContainer = (() => {
 				[null, null, null],
 				[null, null, null]
 			],
-			offset: {
-				x: 150,
-				y: 150
-			}
+			offset: { x: 150, y: 150 }
 		});
 	};
 })();
@@ -811,7 +914,7 @@ const createGearContainerElement = (id, generateChildId) => {
 			);
 	
 	$div.setAttribute('id', id);
-	$div.classList.add('gears-container', 'p-1', 'border');
+	$div.classList.add('gears-container', 'p-1');
 
 	$div.insertAdjacentElement(
 		'beforeend',
@@ -820,7 +923,9 @@ const createGearContainerElement = (id, generateChildId) => {
 	$div.insertAdjacentHTML(
 		'beforeend',
 		`
-			<div class="js-gears-container gears-container__pieces">
+			<div
+				class="js-gears-container gears-container__pieces border"
+			>
 				${containerCells.join('')}
 			</div>
 		`
@@ -834,13 +939,28 @@ const createGearsControl = () => {
 
 	$div.classList.add('gears-container__controls');
 	$div.innerHTML = `
-		<button type="button" class="btn-turn-left btn">
+		<button
+			id="btn-turn-left"
+			type="button"
+			class="control-btn btn fs-3"
+			title="Rotar a la izquierda"
+		>
 			<i class="bi bi-arrow-counterclockwise"></i>
 		</button>
-		<button type="button" class="btn-turn-right btn">
+		<button
+			id="btn-turn-right"
+			type="button"
+			class="control-btn btn fs-3"
+			title="Rotar a la derecha"
+		>
 			<i class="bi bi-arrow-clockwise"></i>
 		</button>
-		<button type="button" class="btn-invert btn">
+		<button
+			id="btn-invert"
+			type="button"
+			class="control-btn btn fs-3"
+			title="Invertir"
+		>
 			<i class="bi bi-arrows"></i>
 		</button>
 	`;
@@ -865,11 +985,11 @@ const makeGear = (() => {
 		},
 	};
 
-	return ({ pos }) => {
+	return ({ pos, classType }) => {
 		let gear = Object.create(proto);
 
 		return Object.assign(gear, {
-			element: createGearElement(),
+			element: createGearElement(classType),
 			relPos: {
 				row: pos.row,
 				col: pos.col
@@ -878,11 +998,19 @@ const makeGear = (() => {
 	};
 })();
 
-const createGearElement = () => {
+const createGearElement = (classType = '') => {
 	let $div = document.createElement('div');
 
-	$div.textContent = 'E';
-	$div.classList.add('gear');
+	$div.classList.add('js-gear', 'gear', classType);
+	$div.insertAdjacentHTML(
+		'afterbegin',
+		`
+			<img 
+				src="/assets/img/iq-gears/engranaje.svg"
+				alt="engranage"
+				draggable="false"
+			/>`
+	);
 	return $div;
 };
 
@@ -896,11 +1024,11 @@ const makeNut = (() => {
 		},
 	};
 
-	return ({ pos }) => {
+	return ({ pos, classType }) => {
 		let nut = Object.create(proto);
 
 		return Object.assign(nut, {
-			element: createNutElement(),
+			element: createNutElement(classType),
 			relPos: {
 				row: pos.row,
 				col: pos.col
@@ -909,11 +1037,20 @@ const makeNut = (() => {
 	};
 })();
 
-const createNutElement = () => {
+const createNutElement = (classType = '') => {
 	let $div = document.createElement('div');
 
-	$div.textContent = 'N';
-	$div.classList.add('gear');
+	$div.classList.add('js-gear', 'nut', classType);
+	$div.insertAdjacentHTML(
+		'afterbegin',
+		`
+			<img
+				src="/assets/img/iq-gears/tuerca.svg"
+				alt="Tuerca"
+				draggable="false"
+			/>
+		`
+	);
 	return $div;
 };
 
@@ -1028,11 +1165,13 @@ const makeGearFactory = (id) => {
 
 			if (gearCode === 'g')
 				gear = makeGear({
-					pos: { row, col }
+					pos: { row, col },
+					classType: id
 				});
 			else if (gearCode === 'n')
 				gear = makeNut({
-					pos: { row, col }
+					pos: { row, col },
+					classType: id
 				});
 			else
 				throw new Error(
