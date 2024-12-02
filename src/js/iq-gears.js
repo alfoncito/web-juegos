@@ -88,6 +88,9 @@ const playState = (game) => {
 		if (!game.gearBoard.isFull()) {
 			cancel()
 			console.log('Faltan piezas');
+			game.beginCell.failPlay(() => {
+				game.endCell.reset();
+			});
 		} else
 			game.changeState('try');
 	};
@@ -141,7 +144,7 @@ const playState = (game) => {
 			if (!gp.isChild(e.target)) continue;
 			if (gp.ignoreMouseDown(e)) break;
 
-			if (game.currPiece)
+			if (game.currPiece && game.currPiece !== gp)
 				restoreGearPiece();
 
 			game.currPiece = gp;
@@ -180,16 +183,15 @@ const playState = (game) => {
 	};
 
 	const restoreGearPiece = () => {
-		let targets = document.querySelectorAll(
+		let currPiece = game.currPiece,
+			targets = document.querySelectorAll(
 				'.js-gears-piece-target'
 			),
-			pieceBound = game.currPiece.element
-				.getBoundingClientRect(),
-			nearTarget,
-			targetDistance = Infinity;
-
-		game.currPiece.element.remove();
-		game.currPiece.release();
+			pieceBound = currPiece.element.getBoundingClientRect(),
+			nearTarget = null,
+			targetDistance = Infinity,
+			nearBound = null,
+			targetWidth = targets[0].getBoundingClientRect().width;
 		
 		for (let target of targets) {
 			if (target.hasChildNodes()) continue;
@@ -205,12 +207,24 @@ const playState = (game) => {
 			if (dist < targetDistance) {
 				targetDistance = dist;
 				nearTarget = target;
+				nearBound = targetBound;
 			}
 		}
 
-		nearTarget.appendChild(
-			game.currPiece.element
-		);
+		currPiece.element.classList.remove('show-control');		
+		gsap.to(currPiece.element, {
+			x: nearBound.x,
+			y: nearBound.y,
+			width: targetWidth,
+			height: targetWidth,
+			duration: .3,
+			onComplete() {
+				currPiece.element.remove();
+				currPiece.release();
+				gsap.set(currPiece.element, { x: 0, y: 0 });
+				nearTarget.appendChild(currPiece.element);	
+			}
+		});
 		game.currPiece = null;
 	};
 
@@ -602,6 +616,23 @@ const makeBeginCell = (elmId) => {
 			let trail = Symbol('trail');
 
 			this.transferenceWithTrail(trail, this.value);
+		},
+		failPlay(cb) {
+			this.disable = true;
+			gsap.to(this, {
+				value: 15,
+				repeat: 1,
+				duration: .25,
+				yoyo: true,
+				ease: 'power3.in',
+				callbackScope: this,
+				onUpdate: this.handleUpdate,
+				onComplete() {
+					this.disable = false;
+					cb?.();
+				},
+				ease: 'none'
+			});
 		}
 	});
 
@@ -787,7 +818,6 @@ const makeGearsContainer = (() => {
 			this.element.classList.add('selected');
 			gsap.set(this.element, {
 				position: 'fixed',
-				cursor: 'grabbing',
 				width: sideWidth,
 				height: sideWidth,
 				top: 0,
@@ -806,7 +836,6 @@ const makeGearsContainer = (() => {
 			this.element.classList.remove('show-control');
 			gsap.set(this.element, {
 				position: 'fixed',
-				cursor: 'grabbing',
 				width: sideWidth,
 				height: sideWidth,
 				top: 0,

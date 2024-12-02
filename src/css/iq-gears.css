@@ -160,6 +160,10 @@ body {}
 	transform: rotate(45deg) scale(.7);
 }
 
+.selected:not(.show-control) .gears-container__pieces {
+	cursor: grabbing;
+}
+
 .selected .gears-container__pieces {
 	font-size: 1.5rem;
 }
