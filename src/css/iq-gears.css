@@ -121,11 +121,11 @@ body {}
 .gears-container {
 	position: relative;
 	height: 100%;
+	z-index: 50;
 }
 
 .gears-container__controls {
 	position: absolute;
-	z-index: 10;
 	top: 0;
 	left: 50%;
 	transform: translate(-50%, -100%) scale(0);
@@ -184,6 +184,7 @@ body {}
 .cell-begin,
 .cell-end {
 	position: absolute;
+	z-index: 30;
 	background-color: hsl(222, 70%, 60%);
 	box-shadow: 0 15px 0 0 hsl(222, 40%, 30%);
 	width: 20%;
@@ -196,6 +197,7 @@ body {}
 .cell-begin {
 	right: 0;
 	bottom: 0;
+	transform: translateX(50%);
 }
 
 .cell-begin button {
@@ -225,6 +227,7 @@ body {}
 .cell-end {
 	left: 0;
 	bottom: 0;
+	transform: translateX(-50%);
 }
 
 .cell-end .light-off,
@@ -237,6 +240,24 @@ body {}
 
 .cell-end .light-on {
 	opacity: 0;
+}
+
+.big-gear {
+	display: block;
+	position: absolute;
+	width: 30%;
+	z-index: 10;
+}
+
+.begin-gear.big-gear {
+	top: 60%;
+	left: 79%;
+}
+
+.end-gear.big-gear {
+	top: 60%;
+	right: 79%;
+	transform: rotate(-5deg);
 }
 
 .gears-pieces-container {

@@ -552,7 +552,8 @@ const makeBeginCell = (elmId) => {
 	let beginCell = Object.create(
 			makeCell({ id: 'begin', elmId })
 		),
-		btn = beginCell.element.querySelector('button');
+		btn = beginCell.element.querySelector('button'),
+		beginBigGear = document.getElementById('begin-big-gear');
 
 	Object.assign(beginCell, {
 		tween: null,
@@ -585,8 +586,8 @@ const makeBeginCell = (elmId) => {
 			this.tween.pause(0, false);
 		},
 		reverse(cb) {
-			let fromValue = this.value % 72,
-				dur = fromValue / 72;
+			let fromValue = this.value % 144,
+				dur = fromValue / 144;
 
 			gsap.to(this, {
 					value: 0,
@@ -603,9 +604,9 @@ const makeBeginCell = (elmId) => {
 		},
 		animate() {
 			this.tween = gsap.to(this, {
-				value: 360,
+				value: 720,
 				repeat: -1,
-				duration: 5,
+				duration: 10,
 				callbackScope: this,
 				onUpdate: this.handleUpdate,
 				ease: 'none',
@@ -615,6 +616,7 @@ const makeBeginCell = (elmId) => {
 		handleUpdate() {
 			let trail = Symbol('trail');
 
+			gsap.set(beginBigGear, { rotation: this.value / -2 });
 			this.transferenceWithTrail(trail, this.value);
 		},
 		failPlay(cb) {
@@ -649,7 +651,8 @@ const makeEndCell = (elmId) => {
 	let endCell = Object.create(makeCell(
 			{ id: 'end', elmId }
 		)),
-		lightOn = document.getElementById('light-on');
+		lightOn = document.getElementById('light-on'),
+		endBigGear = document.getElementById('end-big-gear');
 
 	Object.assign(endCell, {
 		onWin: null,
@@ -664,7 +667,11 @@ const makeEndCell = (elmId) => {
 		isEmpty() {
 			return false;
 		},
-		transfer() {
+		transfer(trail, value) {
+			gsap.set(endBigGear, {
+				rotation: value / 2 - 5
+			});
+			
 			if (this.progress >= 1) return;
 
 			this.progress += 0.01;
@@ -675,6 +682,7 @@ const makeEndCell = (elmId) => {
 		reset() {
 			this.progress = 0;
 			this.tween.progress(0);
+			gsap.set(endBigGear, { rotation: -5 });
 		},
 	});
 

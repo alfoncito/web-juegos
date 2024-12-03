@@ -8,6 +8,18 @@ scripts: ['../js/iq-gears.js']
 <section class="layout">
 	<section class="py-3">
 		<div class="gear-board mx-auto position-relative">
+			<img
+				id="begin-big-gear"
+				class="big-gear begin-gear"
+				src="/assets/img/iq-gears/engranaje-grande.svg"
+				alt="Engranage de inicio"
+			/>
+			<img
+				id="end-big-gear"
+				class="big-gear end-gear"
+				src="/assets/img/iq-gears/engranaje-grande.svg"
+				alt="Engranage de llegada"
+			/>
 			<div class="gear-board__inner">
 				{% for i in range(0, 25) %}
 					<div
@@ -17,9 +29,9 @@ scripts: ['../js/iq-gears.js']
 				{% endfor %}
 			</div>
 			<div id="gear-cell-begin" class="cell-begin">
-				<button type="button"></button>
+				<button type="button" title="Presioname"></button>
 			</div>
-			<div id="gear-cell-end" class="cell-end">
+			<div id="gear-cell-end" class="cell-end"> 
 				<img
 					class="light-off"
 					src="/assets/img/iq-gears/bombillo-apagado.svg"
