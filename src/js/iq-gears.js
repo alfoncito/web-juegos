@@ -415,7 +415,7 @@ const nextLevelState = (game) => {
 				throw new Error(`Id de pieza ${pieceId} no encontrado`);
 
 			piece.set({
-				rotation: parseInt(rotate),
+				rotation: parseInt(rotate ?? 0),
 				inverted: inverted === 'true'
 			});
 			game.gearBoard.fixPiece(piece, parseInt(position));
