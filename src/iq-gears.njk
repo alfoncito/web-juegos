@@ -6,19 +6,24 @@ scripts: ['../js/iq-gears.js']
 ---
 
 <section class="layout">
-	<section class="py-3">
+	<section>
+		<div class="mb-3 text-body-secondary">
+			<span id="levels"></span>
+		</div>
 		<div class="gear-board mx-auto position-relative">
 			<img
 				id="begin-big-gear"
 				class="big-gear begin-gear"
 				src="/assets/img/iq-gears/engranaje-grande.svg"
 				alt="Engranage de inicio"
+				draggable="false"
 			/>
 			<img
 				id="end-big-gear"
 				class="big-gear end-gear"
 				src="/assets/img/iq-gears/engranaje-grande.svg"
 				alt="Engranage de llegada"
+				draggable="false"
 			/>
 			<div class="gear-board__inner">
 				{% for i in range(0, 25) %}

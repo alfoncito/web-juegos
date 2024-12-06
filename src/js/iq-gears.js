@@ -24,6 +24,41 @@ const CELL_CHECK_PATH = {
 	['2:2']: ['down', 'right']	
 };
 
+let sounds = {
+	_audios: {},
+	add(name, src) {
+		let audio = new Audio();
+
+		audio.src = `/assets/sounds/iq-gears/${src}`;
+		this._audios[name] = audio;
+	},
+	play(name, props = {}) {
+		if (!this._audios.hasOwnProperty(name))
+			throw new Error(
+				`'${name}' no es un audio registrado`
+			);
+
+		Object.assign(this._audios[name], props);
+		this._audios[name].play();
+	},
+	pause(name) {
+		if (!this._audios.hasOwnProperty(name))
+			throw new Error(
+				`'${name}' no es un audio registrado`
+			);
+
+		this._audios[name].pause();
+	},
+	get(name, prop) {
+		if (!this._audios.hasOwnProperty(name))
+			throw new Error(
+				`'${name}' no es un audio registrado`
+			);
+
+		return this._audios[name][prop];
+	}
+};
+
 const startGame = () => {
 	let game = {
 		gearBoard: makeGameBoard(),
@@ -58,6 +93,16 @@ const startGame = () => {
 		'up',
 		'down'
 	);
+
+	sounds.add('putPiece', 'put-piece.ogg');
+	sounds.add('btnDown', 'click-down.ogg');
+	sounds.add('btnUp', 'click-up.ogg');
+	sounds.add('failPlay', 'fail-play.ogg');
+	sounds.add('gearsTurning', 'turning.ogg');
+	sounds.add('turnBack', 'turn-back.ogg');
+	sounds.add('popUp', 'pop-up.ogg');
+	sounds.add('popDown', 'pop-down.ogg');
+	sounds.add('victory', 'victory.ogg');
 	
 	game.addState('play', playState(game));
 	game.addState('try', tryState(game));
@@ -87,12 +132,14 @@ const playState = (game) => {
 	const onPlay = (cancel) => {
 		if (!game.gearBoard.isFull()) {
 			cancel()
-			console.log('Faltan piezas');
+			sounds.play('failPlay');
 			game.beginCell.failPlay(() => {
 				game.endCell.reset();
 			});
-		} else
+		} else {
+			sounds.play('gearsTurning', { loop: true });
 			game.changeState('try');
+		}
 	};
 
 	const handleMouseDown = (e) => {
@@ -251,6 +298,7 @@ const playState = (game) => {
 			game.currPiece
 		);
 		game.currPiece = null;
+		sounds.play('putPiece');
 	};
 
 	const canInsertPiece = () => {
@@ -272,7 +320,6 @@ const tryState = (game) => {
 		btnNextLevel = document.getElementById('btn-next-level');
 	
 	const init = () => {
-		console.log('Iniciando prueba');
 		game.beginCell.onPause = onPause;
 		game.endCell.onWin = onWin;
 		btnNextLevel.addEventListener('click', handleClick);
@@ -287,17 +334,15 @@ const tryState = (game) => {
 
 	const onPause = (cancel) => {
 		if (!win) {
-			console.log('Aqui seguimos');
-			game.beginCell.reverse(() => {
-				console.log('Reversado');
-				game.changeState('play');
-			});
-		} else
+			sounds.pause('gearsTurning');
+			game.beginCell.reverse(() => game.changeState('play'));
+		} else {
 			cancel();
+		}
 	};
 
 	const onWin = () => {
-		console.log('Bien hecho');
+		sounds.play('victory', { currentTime: 0 });
 		showButton(() => {
 			win = true;
 		});
@@ -307,6 +352,8 @@ const tryState = (game) => {
 		if (!win) return;
 		
 		hideButton(() => {
+			sounds.pause('gearsTurning');
+			sounds.pause('victory');
 			game.beginCell.pause();
 			game.endCell.reset();
 			game.changeState('nextLevel');
@@ -314,6 +361,7 @@ const tryState = (game) => {
 	};
 
 	const showButton = (cb) => {
+		sounds.play('popUp');
 		gsap.to(btnNextLevel, {
 			ease: 'back.out',
 			scale: 1,
@@ -323,6 +371,7 @@ const tryState = (game) => {
 	};
 
 	const hideButton = (cb) => {
+		sounds.play('popDown');
 		gsap.to(btnNextLevel, {
 			scale: 0,
 			ease: 'back.in',
@@ -335,7 +384,8 @@ const tryState = (game) => {
 };
 
 const nextLevelState = (game) => {
-	let level = -1;
+	let level = -1,
+		levelMark = document.getElementById('levels');
 	
 	const init = () => {
 		game.currPiece = null;
@@ -345,6 +395,7 @@ const nextLevelState = (game) => {
 		
 		fixPieces();
 		displayGearPieces();
+		displayMarkLevel();
 
 		game.changeState('play');
 	};
@@ -382,6 +433,13 @@ const nextLevelState = (game) => {
 			targets[i].appendChild(gp.element);
 			i++;
 		}
+	};
+
+	const displayMarkLevel = () => {
+		let currLevel = level + 1,
+			numLevels = levels.length;
+		
+		levelMark.textContent = `Nivel ${currLevel}/${numLevels}`;
 	};
 
 	return { init, destroy };
@@ -582,13 +640,16 @@ const makeBeginCell = (elmId) => {
 			}
 		},
 		pause() {
-			console.log('Pausando');
 			this.tween.pause(0, false);
 		},
 		reverse(cb) {
 			let fromValue = this.value % 144,
-				dur = fromValue / 144;
+				dur = fromValue / 144,
+				soundDur = sounds.get('turnBack', 'duration');
 
+			sounds.play('turnBack', {
+				currentTime: Math.max(soundDur - dur, 0)
+			});
 			gsap.to(this, {
 					value: 0,
 					startAt: { value: fromValue },
@@ -642,6 +703,12 @@ const makeBeginCell = (elmId) => {
 		'click',
 		beginCell.handleClick.bind(beginCell)
 	);
+	btn.addEventListener('mousedown', () => {
+		sounds.play('btnDown');
+	});
+	btn.addEventListener('mouseup', () => {
+		sounds.play('btnUp');
+	});
 	beginCell.animate();
 
 	return beginCell;
