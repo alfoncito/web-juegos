@@ -19,6 +19,7 @@
     "dev": "eleventy --serve --incremental",
     "build": "rm -rf dist && eleventy --pathprefix=/web-juegos/",
     "build-local": "npm run clean && eleventy",
+    "build-debug": "npm run clean && cross-env DEBUG=* eleventy",
     "debug": "cross-env DEBUG=Eleventy* eleventy --serve --incremental",
     "watch": "eleventy --watch",
     "preview": "vite preview dist",

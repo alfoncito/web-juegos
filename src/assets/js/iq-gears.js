@@ -29,7 +29,7 @@ let sounds = {
 	add(name, src) {
 		let audio = new Audio();
 
-		audio.src = `/assets/sounds/iq-gears/${src}`;
+		audio.src = `/sounds/iq-gears/${src}`;
 		this._audios[name] = audio;
 	},
 	play(name, props = {}) {
@@ -1110,7 +1110,7 @@ const createGearElement = (classType = '') => {
 		'afterbegin',
 		`
 			<img 
-				src="/assets/img/iq-gears/engranaje.svg"
+				src="/img/iq-gears/engranaje.svg"
 				alt="engranage"
 				draggable="false"
 			/>`
@@ -1149,7 +1149,7 @@ const createNutElement = (classType = '') => {
 		'afterbegin',
 		`
 			<img
-				src="/assets/img/iq-gears/tuerca.svg"
+				src="/img/iq-gears/tuerca.svg"
 				alt="Tuerca"
 				draggable="false"
 			/>

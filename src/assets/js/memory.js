@@ -90,7 +90,7 @@ const startGame = () => {
     renderRemaining();
     timer.reset();
     $container.appendChild($loader);
-    images = images.map(img => `/assets/img/${img}`);
+    images = images.map(img => `/img/${img}`);
     loadCards(images, remaining).then(($cards) => {
       $loader.remove();
       $container.appendChild($cards);

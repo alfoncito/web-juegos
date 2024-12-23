@@ -2,16 +2,13 @@ import EleventyVitePlugin from '@11ty/eleventy-plugin-vite';
 // import { EleventyHtmlBasePlugin } from '@11ty/eleventy';
 
 export default (eleventyConfig) => {
-	// eleventyConfig.addPassthroughCopy('src/assets');
-	// eleventyConfig.addWatchTarget('src/js');
-	// eleventyConfig.addWatchTarget('src/css');
-	eleventyConfig.addPassthroughCopy('src/js');
-	eleventyConfig.addPassthroughCopy('src/css');
-	eleventyConfig.addPassthroughCopy('public');
+	eleventyConfig.addPassthroughCopy('src/assets');
+	eleventyConfig.addPassthroughCopy({ 'public': '/' });
 	
 	eleventyConfig.addPlugin(EleventyVitePlugin, {
 		tempFolderName: '.11ty-vite',
 		viteOptions: {
+			base: '/',
 			publicDir: 'public',
 			clearScreen: false,
 			appType: 'mpa',
@@ -23,16 +20,19 @@ export default (eleventyConfig) => {
 				middlewareMode: true
 			},
 			build: {
-				emptyOutDir: true,
+				assetsDir: 'assets',
+				// emptyOutDir: true,
 				mode: 'production',
 				sourcemap: true,
 				manifest: true,
 				rollupOptions: {
+					/*
 					output: {
 						assetFileNames: 'css/[name]-[hash].[ext]',
 						chunkFileNames: 'js/[name]-[hash].js',
 						entryFileNames: 'js/[name]-[hash].js'
 					}
+					*/
 				},
 				watch: {
 					/*
